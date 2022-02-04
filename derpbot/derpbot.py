@@ -216,7 +216,7 @@ def nickmask(data):
 if __name__ == '__main__':
 	if not os.path.exists('plugins/plugin'): os.popen('cp -r plugins-default/* plugins/')
 	parser = argparse.ArgumentParser()
-	parser.add_argument('--dockerized', help="indicates it's run through docker.  Will fetch nick, server, ... over env. variables. (default: False)", type=bool, default=False, required=False)
+	parser.add_argument('--dockerized', help="indicates it's run through docker.  Will fetch nick, server, ... over env. variables. (default: True)", type=bool, default=True, required=False)
 	parser.add_argument('--nick', help="nickname to use", type=str, default='derpbot', required=False)
 	parser.add_argument('--chan', help="#some,#chan,#to,#join", type=str, default='##derpbot', required=False)
 	parser.add_argument('--server', help="irc server to connect", type=str, default="irc.libera.chat", required=False)
