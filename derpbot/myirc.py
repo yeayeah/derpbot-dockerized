@@ -91,12 +91,10 @@ class IRC():
 				# regain nick?
 				if split[0].startswith(':%s!' %self.mynick):
 					self.socket.send('NICK %s\n' %self.mynick)
-					self.nick = self.mynick
 			# nick already used
 			elif split[1] == '433':
 				self.nick = ''.join(random.sample(self.nick, len(self.nick)))
 				self.socket.send('NICK %s\n' %self.nick)
-				time.sleep(0.3)
 				self.socket.send('WHO %s\n' %self.mynick)
 			# WHO reply
 			elif split[1] == '352':
