@@ -48,7 +48,7 @@ class Derpbot():
 			if split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
-					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.nick, self.ownerkey) )
+					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 
 			elif split[1] == 'INVITE':
 				user, mask = nickmask(split[0])
@@ -67,7 +67,7 @@ class Derpbot():
 			elif split[1] == 'PRIVMSG':
 				chan = split[2].lstrip(':')
 				nick, mask = nickmask(split[0])
-				if chan == self.nick:
+				if chan == self.irc.nick:
 					if self.ownerkey is None: continue
 					key = split[3][1:]
 					if key == self.ownerkey:
@@ -81,14 +81,14 @@ class Derpbot():
 				line = split[3:]
 				linestr = ' '.join(line)
 				# line starts with bot's name
-				if line[0].startswith(':%s' %self.nick):
+				if line[0].startswith(':%s' %self.irc.nick):
 					command = line[1]
 					args = line[2:] if len(line) > 2 else []
 					bottalk = True
 				# line starts with !command
 				elif line[0].startswith(':%s' %self.triggerchar):
 					# ignore if we are not the main bot
-					if self.mynick != self.nick: continue
+					if self.irc.mynick != self.irc.nick: continue
 					command = line[0][1:].strip( self.triggerchar )
 					args = line[1:] if len(line) > 1 else []
 					bottalk = False
@@ -96,7 +96,7 @@ class Derpbot():
 				# url title
 				elif linestr.find('://') != -1:
 					# ignore if we are not the main bot
-					if self.mynick != self.nick: continue
+					if self.mynick != self.irc.nick: continue
 					for item in linestr[1:].split(' '):
 						if not '://' in item: continue
 						try: uri, title = get_url_title(item)
