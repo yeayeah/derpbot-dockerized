@@ -32,7 +32,7 @@ Launch
 	    driver: nfs
 	    driver_opts:
 	      path: nfs_server:/home/derpbot/plugins
-		derpbot-data:
-		  driver: nfs
-		  driver_opts:
+	  derpbot-data:
+	    driver: nfs
+	    driver_opts:
 	      path: nfs_server:/home/derpbot/data
