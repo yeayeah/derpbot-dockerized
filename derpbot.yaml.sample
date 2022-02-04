@@ -1,0 +1,12 @@
+version: "3"
+services:
+  derpbot:
+    environment:
+      - SERVER=irc.libera.chat
+      - PORT=6697
+      - SSL=1
+      - NICK=derpbot
+      - AUTH="derpbot somepass"
+      - CHAN=##derpbot
+      - PROXIES=None
+      - TRIGGERCHAR=!

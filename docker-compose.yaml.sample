@@ -1,0 +1,17 @@
+version: "3"
+services:
+  derpbot:
+    image: sabotage-python:latest
+    container_name: sabotage-derpbot
+    volumes:
+      - derpbot-plugins:/home/derpbot/plugins:rw
+      - derpbot-data:/home/derpbot/data:rw
+    build: .
+    restart: always
+    extends:
+      file: derpbot.yaml
+      service: derpbot
+
+volumes:
+  derpbot-plugins:
+  derpbot-data:
