@@ -76,7 +76,7 @@ class Derpbot():
 				line = split[3:]
 				linestr = ' '.join(line)
 				# line starts with bot's name
-				if line[0].startswith(':%s' %self.mynick):
+				if line[0].startswith(':%s' %self.nick):
 					command = line[1]
 					args = line[2:] if len(line) > 2 else []
 					bottalk = True
