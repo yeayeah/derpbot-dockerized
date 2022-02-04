@@ -42,13 +42,18 @@ class Derpbot():
 	def _run(self):
 		self.irc.connect()
 		while self.running:
-			recv = self.irc.get_event('001|JOIN|PRIVMSG|NOTICE')
+			recv = self.irc.get_event('001|JOIN|PRIVMSG|NOTICE|INVITE')
 			if recv is False: break
 			split = recv.split(' ')
 			if split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.nick, self.ownerkey) )
+
+			elif split[1] == 'INVITE':
+				user, mask = nickmask(split[0])
+				if get_user_access(self, mask) > 5: continue
+				self.irc.send('JOIN %s' %split[3].lstrip(':'))
 
 			elif split[1] == 'JOIN':
 				chan = split[2].lstrip(':')
