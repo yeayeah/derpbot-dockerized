@@ -1,6 +1,6 @@
 Acquire rootfs using
 
-	$ wget http://pkg.comploti.st/rootfs-docker-stage1-latest_x86_64.tar.xz -O rootfs.tar.xz
+	$ wget http://pkg.comploti.st/rootfs-stage2-2022-02-06_x86_64.tar.xz -O rootfs.tar.xz
 
 Build image using
 
