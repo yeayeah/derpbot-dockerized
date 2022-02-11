@@ -96,7 +96,7 @@ class Derpbot():
 				# url title
 				elif linestr.find('://') != -1:
 					# ignore if we are not the main bot
-					if self.mynick != self.irc.nick: continue
+					if self.irc.mynick != self.irc.nick: continue
 					for item in linestr[1:].split(' '):
 						if not '://' in item: continue
 						try: uri, title = get_url_title(item)
