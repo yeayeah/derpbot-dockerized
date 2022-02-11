@@ -212,7 +212,7 @@ def get_user_access(self, mask):
 		for l in h.readlines():
 			l = l.strip()
 			host, access = l.split(' ')
-			if mask.find(host) != -1: return int(access)
+			if host.find(mask) != -1: return int(access)
 
 def nickmask(data):
 	_, line = data.split(':')
