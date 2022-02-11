@@ -55,7 +55,7 @@ def action_plugin(arr):
 		elif not len(arr['args']): return {'reply': 'error; use: plugin:load <name>' }
 		for name in arr['args']:
 			print('going with plugin "%s"' %name)
-			if not os.path.exists('plugins/%s' %name): return {'reply': 'error: plugin "%s" not found' }
+			if not os.path.exists('plugins/%s' %name): return {'reply': 'error: plugin "%s" not found'%name }
 			elif name in self.pmlist: return  {'reply': 'plugin "%s" already loaded; you might want to use `plugin:reload`?' }
 			try: self.pm.load_plugin(name)
 			except Exception as e: return {'reply': 'error; cannot load plugin "%s" (%s)' % (name, e) }
