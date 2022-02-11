@@ -34,7 +34,7 @@ def action_plugin(arr):
 		if arr['command'] == 'install' and os.path.exists('plugins/%s' %name): return  {'reply': 'error: plugin with same name exists; you might want to use `plugin:replace`?', 'self': self }
 		plugin = arr['args'][0]
 		if plugin.find('://') != -1:
-			host, port, ssl, uri = _parse_url(url)
+			host, port, ssl, uri = _parse_url(plugin)
 			proxies = None
 			http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
 			if not http.connect(): return {'reply': 'error, failed to fetch from url', 'self': self }
