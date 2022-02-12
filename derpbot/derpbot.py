@@ -27,15 +27,25 @@ class Derpbot():
 		self.threads = []
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
+		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
 	def run(self):
 		if self.pm is not None: self.load_plugins()
 		else: self.pmlist = dict()
+
 		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.proxies, self.auth)
+
 		while self.running:
 			self._run()
 			try: self.irc.disconnect()
-			except: pass
+			except Exception as e: print('run(): error "%s"' % e)
+
+	def _loop_events(self, split, recv):
+
+		for p in self.pmlist:
+			res = self.pm.execute_event_hook(p, {'event': split[1], 'recv': recv, 'self': self })
+			if res is None: continue
+			elif 'self' in res: self = res['self']
 	
 	def _run(self):
 		self.irc.connect()
@@ -43,6 +53,9 @@ class Derpbot():
 			recv = self.irc.get_event('001|JOIN|PRIVMSG|NOTICE|INVITE')
 			if recv is False: break
 			split = recv.split(' ')
+
+			self._loop_events(split, recv)
+
 			if split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
