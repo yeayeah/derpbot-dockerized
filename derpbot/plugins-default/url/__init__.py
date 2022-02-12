@@ -2,6 +2,7 @@ import rocksock
 from http2 import RsHttp, _parse_url
 from soup_parser import soupify
 import re
+import time
 
 def action_url(arr):
 	if arr['command'] == 'provides': return ['title']
@@ -12,13 +13,17 @@ def action_url(arr):
 		'(www.|)twitter.com': ['nitter.net', 'nitter.fdn.fr', 'nitter.pussthecat.org'],
 	}
 	self = arr['self']
-	if arr['command'] == 'url':
+	proxies = None
+	if arr['command'] == 'title':
 
 		for uri in arr['args']:
 			if uri.find('://') == -1: continue
 			nuri = None
 			replacement = None
-			proto, _, domain, req = uri.split('/')
+
+			split = uri.split('/')
+			domain = split[2]
+			req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
 
 			for elem in uri_replace:
 				if re.match(elem, uri):
@@ -34,7 +39,6 @@ def action_url(arr):
 				nuri = uri
 
 			host, port, ssl, uri = _parse_url(uri)
-			proxies = None
 			http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
 			if not http.connect(): continue
 			hdr, res = http.get(uri)
@@ -46,6 +50,6 @@ def action_url(arr):
 				if title is not None:
 					title = title.encode('utf-8') if isinstance(title, unicode) else title
 					title = title.replace('\n', ' ')
-					return nuri, title
-
-		return None, None
+					if nuri is not None: self.irc.socket.send('PRIVMSG %s :%s\n' % (arr['chan'], nuri))
+					self.irc.socket.send('PRIVMSG %s :^ %s\n' % (arr['chan'], title))
+					time.sleep(0.5)
