@@ -17,6 +17,8 @@ def action_translate(arr):
 	hdr, res = http.post(uri, values={'from_language': from_language, 'to_language': to_language, 'input': text})
 
 	soup = soupify(res)
-	for ta in soup.find('textarea', attrs={'class': 'translation'}):
-		translation = ta.get_text()
-		if translation is not None: return {'reply': translation }
+	for ta in soup.find_all('textarea', attrs={'class': 'translation'}):
+		translation = ''.join( ta.contents )
+		if translation is not None:
+			if isinstance(translation, unicode): translation = translation.encode('utf-8')
+			return {'reply': translation }
