@@ -69,6 +69,21 @@ class PluginManager:
 		del self.loaded_plugins[plugin_name]
 		self.logging.info('plugin "%s" unloaded' % plugin_name)
 
+	def execute_event_hook(self, hook_name, hook_params = {}):
+		'''
+		Executes event hook functions of the form action_hook_name contained in
+		the loaded plugin modules.
+		'''
+		res = None
+		for key, plugin_info in self.loaded_plugins.items():
+			module = plugin_info['module']
+			hook_func_name = 'event_%s' % hook_name
+			if hasattr(module, hook_func_name):
+				hook_func = getattr(module, hook_func_name)
+				res = hook_func(hook_params)
+				break
+		return res
+
 	def execute_action_hook(self, hook_name, hook_params = {}):
 		'''
 		Executes action hook functions of the form action_hook_name contained in
