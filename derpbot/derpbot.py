@@ -93,20 +93,6 @@ class Derpbot():
 					args = line[1:] if len(line) > 1 else []
 					bottalk = False
 
-				# url title
-				elif linestr.find('://') != -1:
-					# ignore if we are not the main bot
-					if self.irc.mynick != self.irc.nick: continue
-					for item in linestr[1:].split(' '):
-						if not '://' in item: continue
-						try: uri, title = get_url_title(item)
-						except Exception as e:
-							print(e)
-							continue
-						if uri is not None: self.irc.send('PRIVMSG %s :%s' % (chan, uri))
-						if title is not None: self.irc.send('PRIVMSG %s :^ %s' % (chan, title))
-					continue
-
 				# nothing for the bot
 				else: continue
 
