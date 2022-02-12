@@ -8,8 +8,6 @@ import argparse
 import os
 import random
 import string
-from http2 import RsHttp, _parse_url
-from soup_parser import soupify
 
 class Derpbot():
 	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, proxies=None, args=None):
@@ -158,40 +156,6 @@ class Derpbot():
 		finally:
 			return res
 
-def get_url_title(uri):
-	proto, _, domain, req = uri.split('/')
-	if domain == 'youtube.com' or domain == 'www.youtube.com':
-		uri = uri.replace(domain, 'yewtu.be', True)
-		nuri = uri
-	elif domain == 'youtu.be':
-		uri = 'https://yewtu.be/watch?v=%s' %req
-		nuri = uri
-	elif domain == 'reddit.com':
-		uri = uri.replace(domain, 'libredd.it', True)
-		nuri = uri
-	elif domain == 'twitter.com' or domain == 'www.twitter.com':
-		uri = uri.replace(domain, 'nitter.fdn.fr', True)
-		nuri = uri
-	else:
-		nuri = None
-
-	host, port, ssl, uri = _parse_url(uri)
-	proxies = None
-	http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
-	if not http.connect(): return None
-	hdr, res = http.get(uri)
-	res = res.encode('utf-8') if isinstance(res, unicode) else res
-	soup = soupify(res)
-	title = soup.body.find('title')
-	if title is not None:
-		title = title.get_text()
-		if title is not None:
-			title = title.encode('utf-8') if isinstance(title, unicode) else title
-			title = title.replace('\n', ' ')
-			return nuri, title
-
-	return None, None
-
 def get_user_access(self, mask):
 	if not os.path.isfile('data/%s/access' % self.server): return None
 	with open('data/%s/access' %self.server, 'r') as h:
@@ -205,6 +169,7 @@ def nickmask(data):
 	return line.split('!')
 
 if __name__ == '__main__':
+	if not os.path.exists('plugins'): os.popen('mkdir plugins')
 	if not os.path.exists('plugins/plugin'): os.popen('cp -r plugins-default/* plugins/')
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dockerized', help="indicates it's run through docker.  Will fetch nick, server, ... over env. variables. (default: True)", type=bool, default=True, required=False)
