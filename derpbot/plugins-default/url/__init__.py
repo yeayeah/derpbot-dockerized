@@ -30,42 +30,65 @@ def _get_url_title(uri, proxies=None):
 
 	return title, desc
 
-
-def action_url(arr):
-	if arr['command'] == 'provides': return ['title', 'ud']
-
+def _inspect_uri(uri):
+	nuri = None
+	replacement = None
 	uri_replace = {
 		'(www.|)youtube.com': ['yewtu.be'],
 		'(www.|)reddit.com': ['libredd.it'],
 		'(www.|)twitter.com': ['nitter.net', 'nitter.fdn.fr', 'nitter.pussthecat.org'],
 	}
+
+	split = uri.split('/')
+	domain = split[2]
+	req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
+
+	for elem in uri_replace.keys():
+		if re.match(elem, domain):
+			replacement = random.choice( uri_replace[elem] )
+			break
+
+	if replacement:
+		uri = uri.replace(domain, replacement)
+		nuri = uri
+
+	elif re.match('(www.|)youtu.be', uri):
+		uri = 'https://yewtu.be/watch?v=%s' %req
+		nuri = uri
+
+	return nuri
+
+def event_url(arr):
+	self = arr['self']
+	split = arr['recv'].split(' ')
+	line =  ' '.join( split[3:] ).lstrip(':')
+	chan = split[2]
+	proxies = None
+	for uri in line.split(' '):
+		if uri.find('://') == -1: continue
+		nuri = _inspect_uri(uri)
+		check = nuri if nuri is not None else uri
+		title, desc = _get_url_title(check, proxies)
+
+		if title is None: continue
+		elif nuri is not None: self.irc.socket.send('PRIVMSG %s :%s\n' % (chan, nuri))
+
+		if desc is None: self.irc.socket.send('PRIVMSG %s :^ %s\n' % (chan, title))
+		else: self.irc.socket.send('PRIVMSG %s :^ %s // %s\n' % (chan, title, desc))
+		time.sleep(0.5)
+
+def action_url(arr):
+	if arr['command'] == 'provides': return ['title', 'ud']
+
 	self = arr['self']
 	proxies = None
 	if arr['command'] == 'title':
 
 		for uri in arr['args']:
 			if uri.find('://') == -1: continue
-			nuri = None
-			replacement = None
-
-			split = uri.split('/')
-			domain = split[2]
-			req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
-
-			for elem in uri_replace.keys():
-				if re.match(elem, domain):
-					replacement = random.choice( uri_replace[elem] )
-					break
-
-			if replacement:
-				uri = uri.replace(domain, replacement)
-				nuri = uri
-
-			elif re.match('(www.|)youtu.be', uri):
-				uri = 'https://yewtu.be/watch?v=%s' %req
-				nuri = uri
-
-			title, desc = _get_url_title(uri, proxies)
+			nuri = _inspect_uri(uri)
+			check = nuri if nuri is not None else uri
+			title, desc = _get_url_title(check, proxies)
 
 			if title is None: continue
 			elif nuri is not None: self.irc.socket.send('PRIVMSG %s :%s\n' % (arr['chan'], nuri))
