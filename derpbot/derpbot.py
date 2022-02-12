@@ -66,14 +66,6 @@ class Derpbot():
 				if get_user_access(self, mask) > 5: continue
 				self.irc.send('JOIN %s' %split[3].lstrip(':'))
 
-			elif split[1] == 'JOIN':
-				chan = split[2].lstrip(':')
-				nick, mask = nickmask(split[0])
-				access = get_user_access(self, mask)
-				if access is None: continue
-				elif access <= 10: self.irc.send('MODE %s +o %s' % (chan,nick))
-				elif access <= 20: self.irc.send('MODE %s +v %s' % (chan,nick))
-
 			# bot command ?
 			elif split[1] == 'PRIVMSG':
 				chan = split[2].lstrip(':')

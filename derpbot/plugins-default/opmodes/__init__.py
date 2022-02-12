@@ -1,4 +1,16 @@
 from derpbot import get_user_access
+from misc import nickmask
+
+def event_opmodes(arr):
+	if arr['event'] == 'JOIN':
+		self = arr['self']
+		split = arr['recv'].split(' ')
+		chan = split[2].lstrip(':')
+		nick, mask = nickmask(split[0])
+		access = get_user_access(self, mask)
+		if access is None: return
+		elif access <= 10: self.irc.send('MODE %s +o %s' % (chan,nick))
+		elif access <= 20: self.irc.send('MODE %s +v %s' % (chan,nick))
 
 def action_opmodes(arr):
 	if arr['command'] == 'provides': return [ 'op', 'deop', 'voice', 'devoice', 'ban', 'deban', 'topic' ]
