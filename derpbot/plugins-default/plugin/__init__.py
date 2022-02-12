@@ -67,8 +67,8 @@ def action_plugin(arr):
 
 	elif arr['command'] == 'unload':
 		if get_user_access(self, arr['mask']) > 5: return None
-		elif not len(arr['args']) > 1: return {'reply': 'error; use: plugin:load <name>' }
-		for name in arr['args'][1:]:
+		elif not len(arr['args']) >= 1: return {'reply': 'error; use: plugin:load <name>' }
+		for name in arr['args']:
 			if name in self.pmlist:
 				self.pm.unload_plugin(name)
 				self.pmlist.pop(name, None)
@@ -76,8 +76,8 @@ def action_plugin(arr):
 		
 	elif arr['command'] == 'reload':
 		if get_user_access(self, arr['mask']) > 5: return None
-		elif not len(arr['args']) > 1: return {'reply': 'error; use: plugin:load <name>' }
-		for name in arr['args'][1:]:
+		elif not len(arr['args']) >= 1: return {'reply': 'error; use: plugin:reload <name>' }
+		for name in arr['args']:
 			if name in self.pmlist: 
 				self.pm.unload(name)
 				self.pmlist.pop(name, None)
