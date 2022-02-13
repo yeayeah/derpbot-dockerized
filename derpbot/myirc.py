@@ -14,6 +14,7 @@ class IRC():
 		self.auth = auth
 		self.ssl = ssl
 		self.proxies = proxies
+		self.hostname = ''
 
 	def login(self):
 		self.socket.send('NICK %s\nUSER %s %s localhost :%s\n' % (self.nick, self.nick, self.server, self.nick))
@@ -49,6 +50,29 @@ class IRC():
 		else:
 			threading.Timer(delay, self.send, args=(data, 0)).start()
 
+	def join(self, chan, key=None):
+		if key: self.socket.send('JOIN %s %s\n' % (chan, key))
+		else: self.socket.send('JOIN %S\n' %chan)
+
+	def part(self, chan, reason='leaving'):
+		self.socket.send('PART %s :%s\n' % (chan, reason))
+
+	def cycle(self, chan, key=None, reason='cycle'):
+		self.part(chan, reason)
+		self.join(chan, key)
+
+	def privmsg(self, dest, message):
+		avail = 512
+		# user!ident@host privmsg #dest :<data>
+		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('privmsg') + len(dest) + 4)
+		self.socket.send('PRIVMSG %s :%s\n' %(dest, message[:avail]))
+
+	def notice(self, dest, message):
+		avail = 512
+		# user!ident@host notice #dest :<data>
+		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('notice') + len(dest) + 4)
+		self.socket.send('NOTICE %s :%s\n' %(dest, message[:avail]))
+
 	def parse(self, recv):
 		print('> %s' %recv)
 		#if recv.startswith(':%s!' % self.nick): return None
@@ -83,7 +107,7 @@ class IRC():
 				self.socket.send('JOIN %s\n' %self.chan)
 			elif split[1] == '376':
 				# initiate sasl auth
-				if self.auth: self.socket.send('CAP REQ :sasl\n')
+				if self.auth is not None: self.socket.send('CAP REQ :sasl\n')
 				# or simply join chans
 				else:	self.socket.send('JOIN %s\n' %self.chan)
 			# someone quits
@@ -102,4 +126,10 @@ class IRC():
 					self.send('WHO %s' %self.mynick, 15)
 				elif split[7] == self.nick:
 					self.socket.send('NICK %s\n' % self.mynick)
+
+			#:strontium.libera.chat NOTICE * :*** Found your hostname: cgn05-185-6-233-136.internet.lu
+			elif split[1] == 'NOTICE':
+				if split[0].find('!') == -1:
+					message = ' '.join( split[2:] )
+					if message.find('Found your hostname:') != -1: self.hostname = split[7]
 		return True
