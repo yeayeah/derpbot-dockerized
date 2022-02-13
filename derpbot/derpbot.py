@@ -180,7 +180,6 @@ def nickmask(data):
 	return line.split('!')
 
 if __name__ == '__main__':
-	if not os.path.exists('plugins'): os.popen('mkdir plugins')
 	if not os.path.exists('plugins/plugin'): os.popen('cp -r plugins-default/* plugins/')
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--dockerized', help="indicates it's run through docker.  Will fetch nick, server, ... over env. variables. (default: True)", type=bool, default=True, required=False)
