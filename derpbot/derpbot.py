@@ -8,6 +8,7 @@ import argparse
 import os
 import random
 import string
+import hecketer
 
 class Derpbot():
 	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, proxies=None, args=None):
@@ -27,6 +28,7 @@ class Derpbot():
 		self.threads = []
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
+		self.hecketer = hecketer.Hecketer()
 		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
 	def run(self):
@@ -132,7 +134,13 @@ class Derpbot():
 					
 				# user wants to talk ?
 				elif bottalk:
-					print('user needs to talk')
+					text = ' '.join( line[1:] )
+					for i in range(5):
+						reply = self.hecketer.ask( text )
+						if reply is not None:
+							try: self.irc.privmsg(chan, '%s: %s' % (nick, reply))
+							except: continue
+							break
 
 
 	def load_plugins(self):
