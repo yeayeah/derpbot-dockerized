@@ -77,7 +77,7 @@ class Derpbot():
 						if not os.path.exists('%s/access' %self.datadir):
 							with open('%s/access' %self.datadir, 'w') as h:
 								h.write('%s 0\n' %mask)
-							self.irc.send('PRIVMSG %s :Hello, master. (%s)' % (nick, mask))
+							self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
 							self.ownerkey = None
 					continue
 
@@ -106,7 +106,7 @@ class Derpbot():
 					if plugin in self.pmlist.keys():
 						res = self.run_plugin(nick, chan, mask, plugin, command, args)
 						if res is not None:
-							if 'reply' in res and res['reply']: self.irc.send('PRIVMSG %s :%s' % (chan, res['reply']))
+							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 							if 'self' in res and res['self']: self = res['self']
 						continue
 
@@ -117,12 +117,12 @@ class Derpbot():
 				if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
 					res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
 					if res is not None:
-						if 'reply' in res and res['reply']: self.irc.send('PRIVMSG %s :%s' % (chan, res['reply']))
+						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 						if 'self' in res and res['self'] is not None: self = res['self']
 
 				elif len(matches.keys()) > 1:
-					self.irc.send('PRIVMSG %s :%s: Ambiguous command, "%s" offer command %s.' % (chan, nick, ', '.join( matches.keys()), command))
-					self.irc.send('PRIVMSG %s :%s: Use "plugin_name:command" if multiple plugins offer the same command.' % (chan, nick))
+					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer commnad %s' % (nick, ', '.join( matches.keys()), command))
+					self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
 					
 				# user wants to talk ?
 				elif bottalk:
