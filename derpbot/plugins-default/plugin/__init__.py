@@ -17,14 +17,13 @@ def action_plugin(arr):
 		else:
 			for name in self.pmlist.keys():
 				if name is None: continue
-				self.irc.socket.send('PRIVMSG %s :%s: %s\n' % (arr['chan'], name, ', '.join( self.pmlist[name])))
+				self.irc.privmsg(arr['chan'], '%s: %s' %(name, ', '.join( self.pmlist[name])))
 				time.sleep(0.3)
 
 	elif arr['command'] == 'list':
 		for name in self.pmlist.keys():
 			if name is None: continue
-			print('plugin %s provides %s' % (name, self.pmlist[name]))
-			self.irc.socket.send('PRIVMSG %s :%s: %s\n' % (arr['chan'], name, ', '.join( self.pmlist[name])))
+			self.irc.privmsg(arr['chan'], '%s: %s' %(name, ', '.join( self.pmlist[name])))
 			time.sleep(0.3)
 
 	elif arr['command'] == 'install' or arr['command'] == 'replace':

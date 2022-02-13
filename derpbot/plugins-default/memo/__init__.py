@@ -16,8 +16,8 @@ def event_memo(arr):
 		for md5 in self.p_tell.keys():
 			_array = self.p_tell[md5]
 			if _array['nick_to'] != nick: continue
-			self.irc.socket.send('NOTICE %s :%s said:\n' %(nick, _array['nick_from']))
-			self.irc.socket.send('NOTICE %s :%s\n' %(nick, _array['message']))
+			self.irc.notice(nick, '%s said:' % _array['nick_from'])
+			self.irc.notice(nick, _array['message'])
 			remove.append(md5)
 	
 		for i in remove: del self.p_tell[i]

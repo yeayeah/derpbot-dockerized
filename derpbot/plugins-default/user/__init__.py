@@ -8,7 +8,7 @@ def action_user(arr):
 	if get_user_access(self, arr['mask']) > 5: return None
 
 	if not os.path.exists('%s/access' % self.datadir):
-		self.irc.socket.send('PRIVMSG %s :Error, no access file..\n' % arr['chan'])
+		self.irc.privmsg(arr['chan'], 'Error: no access file..')
 
 	elif arr['command'] == 'add':
 		username, level = arr['args']
@@ -31,5 +31,4 @@ def action_user(arr):
 	elif arr['command'] == 'list':
 		with open('%s/access'%self.datadir, 'r') as r:
 			for l in r.readlines():
-				l = l.strip()
-				self.irc.socket.send('PRIVMSG %s :%s\n' % (arr['nick'], l))
+				self.irc.privmsg(arr['nick'], l.strip())
