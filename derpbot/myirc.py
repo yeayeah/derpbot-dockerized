@@ -91,8 +91,8 @@ class IRC():
 
 		else:
 			split = recv.split(' ')
-			if split[1] == '001':
-				pass
+			if split[1] == '001': pass
+			elif split[1] == '372': return None
 
 			elif split[1] == 'NICK':
 				if split[0].startswith(':%s!' %self.nick):
