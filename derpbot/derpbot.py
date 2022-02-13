@@ -43,7 +43,13 @@ class Derpbot():
 	def _loop_events(self, split, recv):
 
 		for p in self.pmlist:
-			res = self.pm.execute_event_hook(p, {'event': split[1], 'recv': recv, 'self': self })
+			try:
+				res = self.pm.execute_event_hook(p, {'event': split[1], 'recv': recv, 'self': self })
+			except IndexError:
+				continue
+			except Exception as e:
+				print('_loop_events: error (%s)' %e)
+				continue
 			if res is None: continue
 			elif 'self' in res: self = res['self']
 	
