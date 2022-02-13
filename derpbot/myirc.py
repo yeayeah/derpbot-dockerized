@@ -25,8 +25,7 @@ class IRC():
 		self.socket = socket
 		self.login()
 
-	def get_event(self, events):
-		events = events.split('|')
+	def recvline(self):
 		while True:
 			try: recv = self.socket.recvline()
 			except Exception as e:
@@ -37,11 +36,7 @@ class IRC():
 			parsed = self.parse(recv)
 			if parsed is False: return False
 			elif parsed is None: continue
-			split = recv.split(' ')
-			if len(split) > 1:
-				event = split[1]
-				if event in events: return recv
-			
+			else: return recv
 		return False
 
 	def send(self, data, delay=0):
