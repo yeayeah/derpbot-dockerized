@@ -141,7 +141,7 @@ class Derpbot():
 
 	def stop(self):
 		threads = [ t for t in self.threads if t.is_alive() ]
-		if len(threads): threads.join()
+		for t in threads: t.join()
 		if self.irc: self.irc.send('QUIT :leaving')
 		self.running = False
 		self.connected = False
