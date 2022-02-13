@@ -60,6 +60,7 @@ def _inspect_uri(uri):
 
 def event_url(arr):
 	self = arr['self']
+	if self.irc.nick != self.irc.mynick: return
 	split = arr['recv'].split(' ')
 	line =  ' '.join( split[3:] ).lstrip(':')
 	chan = split[2]
