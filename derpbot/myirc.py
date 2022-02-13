@@ -93,6 +93,8 @@ class IRC():
 			split = recv.split(' ')
 			if split[1] == '001': pass
 			elif split[1] == '372': return None
+			# ping/pong game
+			elif split[1] == 'PONG': self.send('PING :%s' %self.nick, 5)
 
 			elif split[1] == 'NICK':
 				if split[0].startswith(':%s!' %self.nick):
@@ -101,6 +103,8 @@ class IRC():
 			elif split[1] == '903':
 				self.socket.send('JOIN %s\n' %self.chan)
 			elif split[1] == '376':
+				# initiate ping/pong game
+				self.socket.send('PING :%s\n' % self.nick)
 				# initiate sasl auth
 				if self.auth is not None: self.socket.send('CAP REQ :sasl\n')
 				# or simply join chans
