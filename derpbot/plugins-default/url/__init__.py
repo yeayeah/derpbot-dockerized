@@ -71,10 +71,10 @@ def event_url(arr):
 		title, desc = _get_url_title(check, proxies)
 
 		if title is None: continue
-		elif nuri is not None: self.irc.socket.send('PRIVMSG %s :%s\n' % (chan, nuri))
+		elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-		if desc is None: self.irc.socket.send('PRIVMSG %s :^ %s\n' % (chan, title))
-		else: self.irc.socket.send('PRIVMSG %s :^ %s // %s\n' % (chan, title, desc))
+		if desc is None: self.irc.privmsg(chan, '^ %s' % title)
+		else: self.irc.privmsg(chan, '^ %s //%s' % (title, desc))
 		time.sleep(0.5)
 
 def action_url(arr):
@@ -91,10 +91,10 @@ def action_url(arr):
 			title, desc = _get_url_title(check, proxies)
 
 			if title is None: continue
-			elif nuri is not None: self.irc.socket.send('PRIVMSG %s :%s\n' % (arr['chan'], nuri))
+			elif nuri is not None: self.irc.privmsg(arr['chan'], nuri)
 
-			if desc is None: self.irc.socket.send('PRIVMSG %s :^ %s\n' % (arr['chan'], title))
-			else: self.irc.socket.send('PRIVMSG %s :^ %s // %s\n' % (arr['chan'], title, desc))
+			if desc is None: self.irc.privmsg(arr['chan'], '^ %s' % title)
+			else: self.irc.privmsg(arr['chan'], '^ %s //%s' % (title, desc))
 			time.sleep(0.5)
 
 	elif arr['command'] == 'ud':
@@ -102,5 +102,5 @@ def action_url(arr):
 			uri = 'https://www.urbandictionary.com/define.php?term=%s' %arg
 			title, desc = _get_url_title(uri, proxies)
 			if title is None or desc is None: continue
-			self.irc.socket.send('PRIVMSG %s :%s: %s\n' % (arr['chan'], title, desc))
+			self.irc.privmsg(arr['chan'], '%s: %s' % (title, desc))
 			time.sleep(0.5)
