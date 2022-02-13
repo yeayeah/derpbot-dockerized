@@ -50,7 +50,7 @@ class Derpbot():
 	def _run(self):
 		self.irc.connect()
 		while self.running:
-			recv = self.irc.get_event('001|JOIN|PRIVMSG|NOTICE|INVITE')
+			recv = self.irc.get_event('001|PRIVMSG|NOTICE|INVITE')
 			if recv is False: break
 			split = recv.split(' ')
 
