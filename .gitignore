@@ -1,0 +1,7 @@
+*pyc
+derpbot.yaml
+docker-compose.yaml
+markov.learn
+__pycache__
+*.tar.xz
+data/
