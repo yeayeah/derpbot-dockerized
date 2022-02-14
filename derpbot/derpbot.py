@@ -28,7 +28,7 @@ class Derpbot():
 		self.threads = []
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
-		self.hecketer = hecketer.Hecketer()
+		self.hecketer = hecketer.Hecketer(learn=True)
 		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
 	def run(self):
@@ -136,7 +136,7 @@ class Derpbot():
 				elif bottalk:
 					text = ' '.join( line[1:] )
 					for i in range(5):
-						reply = self.hecketer.ask( text )
+						reply = self.hecketer.ask(text, single=False)
 						if reply is not None:
 							try: self.irc.privmsg(chan, '%s: %s' % (nick, reply))
 							except: continue
