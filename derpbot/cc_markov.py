@@ -10,6 +10,8 @@ Markov Chain generator
 	using a uniform distribution.
 
 	num_key_words is the number of words that compose a key (suggested: 2 or 3)
+
+	source: https://github.com/Codecademy/markov_python/blob/master/cc_markov.py
 """
 
 class MarkovChain:
