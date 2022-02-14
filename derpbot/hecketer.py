@@ -62,10 +62,15 @@ class Hecketer():
 				if res is not None:
 					content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
 					soup = soupify(content)
-					uris = []
-					for a in soup.find_all('a'):
-						if a['href'].find('reddit.com/r/') != -1: uris.append(a['href'])
-					if len(uris): answers = self.reddit_extract( random.choice( uris ) )
+					uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
+					if not len(uris): continue
+					random.shuffle(uris)
+					for uri in uris:
+						for answer in self.reddit_extract( uri ):
+							if isinstance(answer, unicode): answer = answer.encode('utf-8').replace('\n', ' ')
+							answers.append( answer )
+
+						if len(answers) and single: break
 
 			elif site == 'answers':
 				encoded = text.replace(' ', '_')
@@ -77,7 +82,9 @@ class Hecketer():
 					if reply:
 						if isinstance(reply, unicode): reply = reply.encode('utf-8')
 						reply = reply.replace('\n', ' ')
-						if not reply.startswith('Answers'): answers.append(reply)
+						if reply.startswith('Answers'): continue
+						if isinstance(reply, unicode): reply = reply.encode('utf-8')
+						answers.append(reply)
 
 			if len(answers) and single: break
 
@@ -85,9 +92,6 @@ class Hecketer():
 		if self.markov:
 			for answer in answers: self.markov.add_string(answer)
 
-		answer = random.choice(answers)
-		if isinstance(answer, unicode): answer = answer.encode('utf-8')
-		answer = answer.replace('\n', ' ')
 		return random.choice(answers)
 
 if __name__ == "__main__":
