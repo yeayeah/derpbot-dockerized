@@ -11,20 +11,23 @@ try:
 except:
 	markov = False
 
-def file_get_contents(uri):
+def file_get_contents(uri, postdata=None):
 	host, port, ssl, uri = _parse_url(uri)
 	proxies = None
 	http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
 	if not http.connect(): return None
-	hdr, res = http.get(uri)
+
+	if postdata is None: hdr, res = http.get(uri)
+	else: hdr, res = http.post(uri, postdata)
+
 	if isinstance(res, unicode): res = res.encode('utf-8')
 	return res
 
 class Hecketer():
-	def __init__(self):
-		self.sites = ['answers', 'reddit']
+	def __init__(self, learn=True):
+		self.sites = ['answers', 'reddit', 'ddg']
 		self.markov = cc_markov.MarkovChain() if markov else None
-		if self.markov:
+		if self.markov and learn:
 			if os.path.exists('markov.learn'):
 				self.markov.add_file('markov.learn')
 
@@ -67,7 +70,8 @@ class Hecketer():
 					random.shuffle(uris)
 					for uri in uris:
 						for answer in self.reddit_extract( uri ):
-							if isinstance(answer, unicode): answer = answer.encode('utf-8').replace('\n', ' ')
+							if isinstance(answer, unicode): answer = answer.encode('utf-8')
+							answer = answer.replace('\n', ' ')
 							answers.append( answer )
 
 						if len(answers) and single: break
@@ -86,6 +90,17 @@ class Hecketer():
 						if isinstance(reply, unicode): reply = reply.encode('utf-8')
 						answers.append(reply)
 
+			elif site == 'ddg':
+				encoded = urllib.quote_plus(text).replace('%20', '+')
+				res = file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''})
+				if res is None: continue
+				soup = soupify(res)
+				for a in soup.find_all('a', attrs={'class': 'result__snippet'}):
+					reply = a.get_text()
+					if isinstance(reply, unicode): reply = reply.encode('utf-8')
+					reply = reply.replace('\n', ' ')
+					answers.append(reply)
+
 			if len(answers) and single: break
 
 		if not len(answers): return None
@@ -96,7 +111,7 @@ class Hecketer():
 
 if __name__ == "__main__":
 
-	heck = Hecketer()
+	heck = Hecketer(learn=False)
 
 	while 1:
 		try:
