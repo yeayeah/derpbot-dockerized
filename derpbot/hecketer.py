@@ -25,7 +25,7 @@ def file_get_contents(uri, postdata=None):
 
 class Hecketer():
 	def __init__(self, learn=True):
-		self.sites = ['answers', 'reddit', 'ddg']
+		self.sites = ['answers', 'reddit', 'ddg', 'ask']
 		self.markov = cc_markov.MarkovChain() if markov else None
 		if self.markov and learn:
 			if os.path.exists('markov.learn'):
@@ -69,10 +69,9 @@ class Hecketer():
 				if not len(uris): continue
 				random.shuffle(uris)
 				for uri in uris:
-					for answer in self.reddit_extract( uri ):
-						if isinstance(answer, unicode): answer = answer.encode('utf-8')
-						answer = answer.replace('\n', ' ')
-						answers.append( answer )
+					for reply in self.reddit_extract( uri ):
+						reply = self.check_reply(reply)
+						if reply is not None: answers.append(reply)
 
 					if len(answers) and single: break
 
@@ -82,12 +81,9 @@ class Hecketer():
 				if res is None: continue
 				soup = soupify(res)
 				meta = soup.find('meta', property='og:description')
-				reply = meta['content'] if meta else None
-				if reply is None: continue
-				elif isinstance(reply, unicode): reply = reply.encode('utf-8')
-				reply = reply.replace('\n', ' ')
-				if reply.startswith('Answers'): continue
-				answers.append(reply)
+				reply = self.check_reply( meta['content']) if meta else None
+				if reply and reply.startswith('Answers'): continue
+				elif reply is not None: answers.append(reply)
 
 			elif site == 'ddg':
 				encoded = urllib.quote_plus(text).replace('%20', '+')
@@ -95,10 +91,18 @@ class Hecketer():
 				if res is None: continue
 				soup = soupify(res)
 				for a in soup.find_all('a', attrs={'class': 'result__snippet'}):
-					reply = a.get_text()
-					if isinstance(reply, unicode): reply = reply.encode('utf-8')
-					reply = reply.replace('\n', ' ')
-					answers.append(reply)
+					reply = self.check_reply( a.get_text() )
+					if reply is not None: answers.append(reply)
+
+			elif site == 'ask':
+				encoded = urllib.quote_plus(text)
+				res = file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded)
+				if res is None: continue
+				content = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
+				soup = soupify(content)
+				for p in soup.find_all('p', attrs={'class':'PartialSearchResults-item-abstract'}):
+					reply = self.check_reply( p.get_text() )
+					if reply is not None and not reply.endswith('...'): answers.append(reply)
 
 			if len(answers) and single: break
 
@@ -107,6 +111,11 @@ class Hecketer():
 			for answer in answers: self.markov.add_string(answer)
 
 		return random.choice(answers)
+
+	def check_reply(self, reply):
+		if isinstance(reply, unicode): reply = reply.encode('utf-8')
+		reply = reply.replace('\n', ' ')
+		return reply
 
 if __name__ == "__main__":
 
