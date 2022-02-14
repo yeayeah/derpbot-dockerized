@@ -62,33 +62,32 @@ class Hecketer():
 			if site == 'reddit':
 				urlencoded = urllib.quote_plus(text)
 				res = file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded)
-				if res is not None:
-					content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
-					soup = soupify(content)
-					uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
-					if not len(uris): continue
-					random.shuffle(uris)
-					for uri in uris:
-						for answer in self.reddit_extract( uri ):
-							if isinstance(answer, unicode): answer = answer.encode('utf-8')
-							answer = answer.replace('\n', ' ')
-							answers.append( answer )
+				if res is None: continue
+				content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
+				soup = soupify(content)
+				uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
+				if not len(uris): continue
+				random.shuffle(uris)
+				for uri in uris:
+					for answer in self.reddit_extract( uri ):
+						if isinstance(answer, unicode): answer = answer.encode('utf-8')
+						answer = answer.replace('\n', ' ')
+						answers.append( answer )
 
-						if len(answers) and single: break
+					if len(answers) and single: break
 
 			elif site == 'answers':
 				encoded = text.replace(' ', '_')
 				res = file_get_contents('https://www.answers.com/Q/%s' %encoded)
-				if res is not None:
-					soup = soupify(res)
-					meta = soup.find('meta', property='og:description')
-					reply = meta['content'] if meta else None
-					if reply:
-						if isinstance(reply, unicode): reply = reply.encode('utf-8')
-						reply = reply.replace('\n', ' ')
-						if reply.startswith('Answers'): continue
-						if isinstance(reply, unicode): reply = reply.encode('utf-8')
-						answers.append(reply)
+				if res is None: continue
+				soup = soupify(res)
+				meta = soup.find('meta', property='og:description')
+				reply = meta['content'] if meta else None
+				if reply is None: continue
+				elif isinstance(reply, unicode): reply = reply.encode('utf-8')
+				reply = reply.replace('\n', ' ')
+				if reply.startswith('Answers'): continue
+				answers.append(reply)
 
 			elif site == 'ddg':
 				encoded = urllib.quote_plus(text).replace('%20', '+')
