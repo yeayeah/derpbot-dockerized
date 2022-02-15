@@ -135,13 +135,9 @@ class Derpbot():
 				# user wants to talk ?
 				elif bottalk:
 					text = ' '.join( line[1:] )
-					for i in range(5):
-						reply = self.hecketer.ask(text, single=False)
-						if reply is not None:
-							try: self.irc.privmsg(chan, '%s: %s' % (nick, reply))
-							except: continue
-							break
-
+					reply = self.hecketer.ask(text, single=False)
+					if reply is not None:
+						self.irc.privmsg(chan, '%s: %s' % (nick, reply))
 
 	def load_plugins(self):
 		self.pmlist = dict()

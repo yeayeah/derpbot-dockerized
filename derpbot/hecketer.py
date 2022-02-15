@@ -24,90 +24,106 @@ def file_get_contents(uri, postdata=None):
 	return res
 
 class Hecketer():
-	def __init__(self, learn=True):
+	def __init__(self, learn=True, return_asap=True):
+		self.learn = learn
+		self.return_asap = return_asap
 		self.sites = ['answers', 'reddit', 'ddg', 'ask']
 		self.markov = cc_markov.MarkovChain() if markov else None
 		if self.markov and learn:
 			if os.path.exists('markov.learn'):
 				self.markov.add_file('markov.learn')
 
-	def reddit_extract(self, uri):
-		answers = []
-		res = file_get_contents(uri)
-		content = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
-		soup = soupify(content)
-		for script in soup.find_all('script', attrs={'id':'data'}):
-			contents = script.contents[0].split(' ')
-			_json = json.loads( ' '.join( contents[2:] )[:-1] )
-			if 'features' in _json and 'comments' in _json['features'] and 'models' in _json['features']['comments']:
-				for item in _json['features']['comments']['models']:
-					row = _json['features']['comments']['models'][item]
-					if not 'media' in row: continue
-					if not 'richtextContent' in row['media']: continue
-					if not 'document' in row['media']['richtextContent']: continue
-					for d in row['media']['richtextContent']:
-						documents = row['media']['richtextContent'][d][0]
-						try: text = documents['c'][0]['t']
-						except: continue
-						answers.append(text)
-		return answers
-				
+	def set_sites(self, sites):
+		self.sites = [ i.strip() for i in str(sites).split(',') ]
 
-	def ask(self, text, single=True):
+	def _ask_reddit(self, text, answers=[]):
+		def reddit_extract(uri):
+			answers = []
+			res = file_get_contents(uri)
+			content = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
+			soup = soupify(content)
+			for script in soup.find_all('script', attrs={'id':'data'}):
+				contents = script.contents[0].split(' ')
+				_json = json.loads( ' '.join( contents[2:] )[:-1] )
+				if 'features' in _json and 'comments' in _json['features'] and 'models' in _json['features']['comments']:
+					for item in _json['features']['comments']['models']:
+						row = _json['features']['comments']['models'][item]
+						if not 'media' in row: continue
+						if not 'richtextContent' in row['media']: continue
+						if not 'document' in row['media']['richtextContent']: continue
+						for d in row['media']['richtextContent']:
+							documents = row['media']['richtextContent'][d][0]
+							try: text = documents['c'][0]['t']
+							except: continue
+							answers.append(text)
+			return answers
+		urlencoded = urllib.quote_plus(text)
+		res = file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded)
+		if res is None: return None
+		content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
+		soup = soupify(content)
+		uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
+		if not len(uris): return None
+		for reply in reddit_extract( random.choice(uris) ):
+			reply = self.check_reply(reply)
+			if reply is not None: answers.append(reply)
+
+		return answers if len(answers) else None
+
+	def _ask_answers(self, text, answers=[]):
+		encoded = text.replace(' ', '_')
+		res = file_get_contents('https://www.answers.com/Q/%s' %encoded)
+		if res is None: return None
+		soup = soupify(res)
+		meta = soup.find('meta', property='og:description')
+		reply = self.check_reply( meta['content']) if meta else None
+		if reply is not None: answers.append(reply)
+		return answers if len(answers) else None
+
+	def _ask_ddg(self, text, answers=[]):
+		encoded = urllib.quote_plus(text).replace('%20', '+')
+		res = file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''})
+		if res is None: return None
+		soup = soupify(res)
+		for a in soup.find_all('a', attrs={'class': 'result__snippet'}):
+			reply = self.check_reply( a.get_text() )
+			if reply is not None: answers.append(reply)
+		return answers if len(answers) else None
+
+	def _ask_ask(self, text, answers=[]):
+		encoded = urllib.quote_plus(text)
+		res = file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded)
+		if res is None: return None
+		content = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
+		soup = soupify(content)
+		for p in soup.find_all('p', attrs={'class':'PartialSearchResults-item-abstract'}):
+			reply = self.check_reply( p.get_text() )
+			if reply is not None and not reply.endswith('...'): answers.append(reply)
+		return answers if len(answers) else None
+
+	def ask(self, text):
 		answers = []
 		random.shuffle(self.sites)
 
 		for site in self.sites:
 
 			if site == 'reddit':
-				urlencoded = urllib.quote_plus(text)
-				res = file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded)
-				if res is None: continue
-				content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
-				soup = soupify(content)
-				uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
-				if not len(uris): continue
-				random.shuffle(uris)
-				for uri in uris:
-					for reply in self.reddit_extract( uri ):
-						reply = self.check_reply(reply)
-						if reply is not None: answers.append(reply)
-
-					if len(answers) and single: break
+				answers = self._ask_reddit(text, answers)
 
 			elif site == 'answers':
-				encoded = text.replace(' ', '_')
-				res = file_get_contents('https://www.answers.com/Q/%s' %encoded)
-				if res is None: continue
-				soup = soupify(res)
-				meta = soup.find('meta', property='og:description')
-				reply = self.check_reply( meta['content']) if meta else None
-				if reply and reply.startswith('Answers'): continue
-				elif reply is not None: answers.append(reply)
+				answers = self._ask_answers(text, answers)
 
 			elif site == 'ddg':
-				encoded = urllib.quote_plus(text).replace('%20', '+')
-				res = file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''})
-				if res is None: continue
-				soup = soupify(res)
-				for a in soup.find_all('a', attrs={'class': 'result__snippet'}):
-					reply = self.check_reply( a.get_text() )
-					if reply is not None: answers.append(reply)
+				answers = self._ask_ddg(text, answers)
 
 			elif site == 'ask':
-				encoded = urllib.quote_plus(text)
-				res = file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded)
-				if res is None: continue
-				content = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
-				soup = soupify(content)
-				for p in soup.find_all('p', attrs={'class':'PartialSearchResults-item-abstract'}):
-					reply = self.check_reply( p.get_text() )
-					if reply is not None and not reply.endswith('...'): answers.append(reply)
+				answers = self._ask_ask(text, answers)
 
-			if len(answers) and single: break
+			if answers is None: answers = []
+			elif len(answers) and self.return_asap: break
 
-		if not len(answers): return None
-		if self.markov:
+		if answers is None or not len(answers): return None
+		elif self.markov:
 			for answer in answers: self.markov.add_string(answer)
 
 		return random.choice(answers)
@@ -115,11 +131,11 @@ class Hecketer():
 	def check_reply(self, reply):
 		if isinstance(reply, unicode): reply = reply.encode('utf-8')
 		reply = reply.replace('\n', ' ')
-		return reply
+		return None if reply.startswith('Answers') or reply.endswith('...') else reply
 
 if __name__ == "__main__":
 
-	heck = Hecketer(learn=False)
+	heck = Hecketer(learn=False, return_asap=False)
 
 	while 1:
 		try:
