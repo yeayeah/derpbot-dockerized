@@ -147,8 +147,6 @@ class Derpbot():
 			except: provides = [ plugin ]
 			finally: self.pmlist[plugin] = provides
 
-			print('plugin %s provides: %s' % (plugin, provides))
-
 	def stop(self):
 		threads = [ t for t in self.threads if t.is_alive() ]
 		for t in threads: t.join()
