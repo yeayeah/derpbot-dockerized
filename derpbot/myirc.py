@@ -74,7 +74,7 @@ class IRC():
 		# clean disconnect
 		if recv.startswith('ERROR'): return False
 		# ping request
-		elif recv.startswith('PING'): self.socket.send( recv.replace('I','O', True) )
+		elif recv.startswith('PING'): self.send( recv.replace('I','O', True) )
 		# sasl stuff
 		elif recv.find('CAP %s ACK :sasl' %self.nick) != -1:
 			self.socket.send('AUTHENTICATE PLAIN\n')
