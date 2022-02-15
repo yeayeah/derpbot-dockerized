@@ -40,8 +40,8 @@ class Hecketer():
 		def reddit_extract(uri):
 			answers = []
 			res = file_get_contents(uri)
-			content = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
-			soup = soupify(content)
+			contents = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
+			soup = soupify(contents)
 			for script in soup.find_all('script', attrs={'id':'data'}):
 				contents = script.contents[0].split(' ')
 				_json = json.loads( ' '.join( contents[2:] )[:-1] )
@@ -60,8 +60,8 @@ class Hecketer():
 		urlencoded = urllib.quote_plus(text)
 		res = file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded)
 		if res is None: return None
-		content = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
-		soup = soupify(content)
+		contents = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
+		soup = soupify(contents)
 		uris = [ a['href'] for a in soup.find_all('a') if a['href'].find('reddit.com/r/') != -1 ]
 		if not len(uris): return None
 		for reply in reddit_extract( random.choice(uris) ):
@@ -84,7 +84,8 @@ class Hecketer():
 		encoded = urllib.quote_plus(text).replace('%20', '+')
 		res = file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''})
 		if res is None: return None
-		soup = soupify(res)
+		contents = '\n'.join([ a for a in rsparse.find_all_tags(res, 'a') ])
+		soup = soupify(contents)
 		for a in soup.find_all('a', attrs={'class': 'result__snippet'}):
 			reply = self.check_reply( a.get_text() )
 			if reply is not None: answers.append(reply)
@@ -94,8 +95,8 @@ class Hecketer():
 		encoded = urllib.quote_plus(text)
 		res = file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded)
 		if res is None: return None
-		content = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
-		soup = soupify(content)
+		contents = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
+		soup = soupify(contents)
 		for p in soup.find_all('p', attrs={'class':'PartialSearchResults-item-abstract'}):
 			reply = self.check_reply( p.get_text() )
 			if reply is not None and not reply.endswith('...'): answers.append(reply)
