@@ -1,0 +1,26 @@
+version: "3"
+services:
+  derpbot:
+    user: 998:996
+    image: 192.168.20.1:5000/sabotage-python
+    volumes:
+      - derpbot-plugins:/home/derpbot/plugins
+      - derpbot-data:/home/derpbot/data
+    environment:
+      - SERVER=irc.libera.chat
+      - PORT=6697
+      - SSL=1
+      - NICK=derpyderp
+      - AUTH=derpbot Sv1obu3BjPHvEgpo4pd9Xq1tsW+ReKAB
+      - CHAN=##derpbot,#/pol/
+      - TRIGGERCHAR=;
+
+volumes:
+  derpbot-plugins:
+    driver: nfs
+    driver_opts:
+      share: 192.168.20.1:/home/derpbot/plugins
+  derpbot-data:
+    driver: nfs
+    driver_opts:
+      share: 192.168.20.1:/home/derpbot/data
