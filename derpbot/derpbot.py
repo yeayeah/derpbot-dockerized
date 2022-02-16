@@ -136,7 +136,7 @@ class Derpbot():
 				# user wants to talk ?
 				elif bottalk:
 					text = ' '.join( line[1:] )
-					reply = self.hecketer.ask(text, single=False)
+					reply = self.hecketer.ask(text)
 					if reply is not None:
 						self.irc.privmsg(chan, '%s: %s' % (nick, reply))
 
