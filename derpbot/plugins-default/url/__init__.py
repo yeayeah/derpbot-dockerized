@@ -92,9 +92,7 @@ def action_url(arr):
 			time.sleep(0.5)
 
 	elif arr['command'] == 'ud':
-		for arg in arr['args']:
-			uri = 'https://www.urbandictionary.com/define.php?term=%s' %arg
-			title, desc = _get_url_title(uri, proxies=self.args.http_proxy)
-			if title is None or desc is None: continue
-			self.irc.privmsg(arr['chan'], '%s: %s' % (title, desc))
-			time.sleep(0.5)
+		arg = '+'.join(arr['args'])
+		uri = 'https://www.urbandictionary.com/define.php?term=%s' %arg
+		_, desc = _get_url_title(uri, proxies=self.args.http_proxy)
+		if desc: self.irc.privmsg(arr['chan'], '%s' % desc)
