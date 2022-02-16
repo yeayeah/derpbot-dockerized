@@ -40,8 +40,6 @@ class Derpbot():
 
 		while self.running:
 			self._run()
-			try: self.irc.disconnect()
-			except Exception as e: print('run(): error "%s"' % e)
 
 	def _loop_events(self, split, recv):
 
@@ -57,6 +55,7 @@ class Derpbot():
 			elif 'self' in res: self = res['self']
 	
 	def _run(self):
+		self.irc.authed = False
 		self.irc.connect()
 		while self.running:
 			recv = self.irc.recvline()
