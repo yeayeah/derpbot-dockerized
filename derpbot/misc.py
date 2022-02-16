@@ -19,3 +19,6 @@ def file_get_contents(uri, postdata=None, proxies=None):
 
 	if isinstance(res, unicode): res = res.encode('utf-8')
 	return res
+
+def isop(self, chan, nick):
+	return True if 'op' in self.nicklist[chan][nick] else False
