@@ -11,7 +11,7 @@ import string
 import hecketer
 
 class Derpbot():
-	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, proxies=None, args=None):
+	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, args=None):
 		self.server = server
 		self.args = args
 		self.port = port
@@ -21,21 +21,22 @@ class Derpbot():
 		self.irc = None
 		self.ssl = ssl
 		self.auth = auth
-		self.proxies = proxies
+		self.irc_proxy = args.irc_proxy
+		self.http_proxy = args.http_proxy
 		self.triggerchar = triggerchar
 		self.datadir = 'data/%s' %self.server
 		self.running = True
 		self.threads = []
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
-		self.hecketer = hecketer.Hecketer(learn=True)
+		self.hecketer = hecketer.Hecketer(learn=True, proxies=self.http_proxy)
 		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
 	def run(self):
 		if self.pm is not None: self.load_plugins()
 		else: self.pmlist = dict()
 
-		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.proxies, self.auth)
+		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.irc_proxy, self.auth)
 
 		while self.running:
 			self._run()
@@ -135,7 +136,7 @@ class Derpbot():
 				# user wants to talk ?
 				elif bottalk:
 					text = ' '.join( line[1:] )
-					reply = self.hecketer.ask(text, single=False)
+					reply = self.hecketer.ask(text)
 					if reply is not None:
 						self.irc.privmsg(chan, '%s: %s' % (nick, reply))
 
@@ -191,7 +192,8 @@ if __name__ == '__main__':
 	parser.add_argument('--port', help="port to connect to", type=int, default=6697, required=False)
 	parser.add_argument('--use-ssl', help="use ssl? (default: true)", type=bool, default=True, required=False)
 	parser.add_argument('--auth', help="define username/password to identify to. format 'username password'", type=str, default=None, required=False)
-	parser.add_argument('--proxies', help="proxy/ies to use/chain. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
+	parser.add_argument('--irc_proxy', help="proxy/ies to use/chain for IRC connections. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
+	parser.add_argument('--http_proxy', help="proxy/ies to use/chain for HTTP(s) connections. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
 	parser.add_argument('--triggerchar', help="trigger char (default: !)", type=str, default='!', required=False)
 
 	args = parser.parse_args()
@@ -203,7 +205,8 @@ if __name__ == '__main__':
 		args.chan = os.getenv('CHAN', '##derpbot')
 		args.auth = os.getenv('AUTH', None)
 		args.use_ssl = bool(os.getenv('SSL', 1))
-		args.proxies = os.getenv('PROXIES', None)
+		args.irc_proxy = os.getenv('IRC_PROXY', None)
+		args.http_proxy = os.getenv('HTTP_PROXY', None)
 		args.triggerchar = os.getenv('TRIGGERCHAR', '!')
 
 	if not os.path.exists('data/%s' %args.server):
@@ -213,9 +216,9 @@ if __name__ == '__main__':
 			print('ERROR: cannot create "data/%s" directory' %args.server)
 			raise
 
-
-	proxies = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.proxies.split(';') ] if args.proxies else None
-	derp = Derpbot(server=args.server, port=args.port, nick=args.nick, chan=args.chan, ssl=args.use_ssl, auth=args.auth, proxies=proxies, triggerchar=args.triggerchar, args=args)
+	args.irc_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.irc_proxy.split(';') ] if args.irc_proxy else None
+	args.http_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.http_proxy.split(';') ] if args.http_proxy else None
+	derp = Derpbot(server=args.server, port=args.port, nick=args.nick, chan=args.chan, ssl=args.use_ssl, auth=args.auth, triggerchar=args.triggerchar, args=args)
 
 	try: derp.run()
 	except KeyboardInterrupt: pass

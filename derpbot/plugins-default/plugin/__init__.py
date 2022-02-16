@@ -1,9 +1,8 @@
 from derpbot import get_user_access
-import rocksock
-from http2 import RsHttp, _parse_url
 import os
 import plugins
 import time
+import misc
 
 def action_plugin(arr):
 	if arr['command'] == 'provides': return ['install', 'load', 'unload', 'reload', 'replace', 'list', 'help']
@@ -33,12 +32,7 @@ def action_plugin(arr):
 		if arr['command'] == 'install' and os.path.exists('plugins/%s' %name): return  {'reply': 'error: plugin with same name exists; you might want to use `plugin:replace`?', 'self': self }
 		plugin = arr['args'][0]
 		if plugin.find('://') != -1:
-			host, port, ssl, uri = _parse_url(plugin)
-			proxies = None
-			http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
-			if not http.connect(): return {'reply': 'error, failed to fetch from url', 'self': self }
-			hdr, res = http.get(uri, headers)
-			res = res.encode('utf-8') if isinstance(res, unicode) else res
+			res = misc.file_get_contents(plugin, proxies=self.args.http_proxy)
 		else:
 			if not os.path.exists('plugins-available/%s/__init__.py' %plugin):
 				return {'reply': 'error; plugin "%s" does not exist', 'self': self }
