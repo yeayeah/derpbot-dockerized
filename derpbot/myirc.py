@@ -15,9 +15,24 @@ class IRC():
 		self.ssl = ssl
 		self.proxies = proxies
 		self.hostname = ''
+		self.authed = False
 
 	def login(self):
 		self.socket.send('NICK %s\nUSER %s %s localhost :%s\n' % (self.nick, self.nick, self.server, self.nick))
+
+	def identify(self, method):
+		if not self.auth or self.authed: return
+		elif method == 'nickserv':
+			self.send('NICKSERV IDENTIFY %s' % self.auth)
+		elif method == 'b64':
+			import base64
+			username, password = self.auth.split(' ')
+			sasl = base64.b64encode("%s\0%s\0%s" % (username, username, password)).decode()
+			self.send('AUTHENTICATE %s\nCAP END' % sasl.encode('utf-8'))
+		elif method == 'auth':
+			self.send('AUTH %s' % self.auth.replace(' ', ':', True))
+
+		self.authed = True
 
 	def connect(self):
 		socket = rocksock.Rocksock(host=self.server,port=self.port,ssl=self.ssl,proxies=self.proxies)
@@ -74,18 +89,16 @@ class IRC():
 		# clean disconnect
 		if recv.startswith('ERROR'): return False
 		# ping request
-		elif recv.startswith('PING'): self.send( recv.replace('I','O', True) )
+		elif recv.startswith('PING'):
+			self.send( recv.replace('I','O', True) )
 		# sasl stuff
 		elif recv.find('CAP %s ACK :sasl' %self.nick) != -1:
 			self.socket.send('AUTHENTICATE PLAIN\n')
 		elif recv.startswith('AUTHENTICATE +'):
-			import base64
-			username, password = self.auth.split(' ')
-			sasl = base64.b64encode("%s\0%s\0%s" % (username, username, password)).decode()
-			self.socket.send('AUTHENTICATE %s\nCAP END\n' % sasl.encode('utf-8'))
+			self.identify(method='b64')
 		# sasl not supported, fallback to nickserv auth
 		elif recv.find('CAP %s NAK :sasl' %self.nick) != -1:
-			self.socket.send('NICKSERV IDENTIFY %s %s\n' % (self.auth.split(' ')[0], self.auth.split(' ')[1]))
+			self.identfy(method='nickserv')
 		# ignore other lines not starting with ':'
 		elif recv[0] != ':': return None
 
@@ -100,13 +113,16 @@ class IRC():
 				if split[0].startswith(':%s!' %self.nick):
 					self.nick = split[2].lstrip(':')
 			# sasl auth success
+			elif split[1] == '900':
+				self.authed = True
+				_, self.hostname = split[3].split('@')
 			elif split[1] == '903':
 				self.socket.send('JOIN %s\n' %self.chan)
 			elif split[1] == '376':
 				# initiate ping/pong game
 				self.socket.send('PING :%s\n' % self.nick)
 				# initiate sasl auth
-				if self.auth is not None: self.socket.send('CAP REQ :sasl\n')
+				if self.auth and not self.authed: self.socket.send('CAP REQ :sasl\n')
 				# or simply join chans
 				else:	self.socket.send('JOIN %s\n' %self.chan)
 			# someone quits
@@ -130,5 +146,8 @@ class IRC():
 			elif split[1] == 'NOTICE':
 				if split[0].find('!') == -1:
 					message = ' '.join( split[2:] )
-					if message.find('Found your hostname:') != -1: self.hostname = split[7]
+					if message.find('Found your hostname:') != -1:
+						self.hostname = split[7]
+					elif message.find('QUOTE AUTH') != -1:
+						self.identify(method='auth')
 		return True
