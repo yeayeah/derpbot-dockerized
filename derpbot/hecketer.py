@@ -1,9 +1,10 @@
 import urllib
-from http2 import RsHttp, _parse_url
 from soup_parser import soupify
+import misc
 import random
 import rsparse
 import json
+
 try:
 	import cc_markov
 	import os
@@ -11,24 +12,13 @@ try:
 except:
 	markov = False
 
-def file_get_contents(uri, postdata=None):
-	host, port, ssl, uri = _parse_url(uri)
-	proxies = None
-	http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
-	if not http.connect(): return None
-
-	if postdata is None: hdr, res = http.get(uri)
-	else: hdr, res = http.post(uri, postdata)
-
-	if isinstance(res, unicode): res = res.encode('utf-8')
-	return res
-
 class Hecketer():
-	def __init__(self, learn=True, return_asap=True):
+	def __init__(self, learn=True, return_asap=True, proxies=None):
 		self.learn = learn
 		self.return_asap = return_asap
 		self.sites = ['answers', 'reddit', 'ddg', 'ask']
 		self.markov = cc_markov.MarkovChain() if markov else None
+		self.proxies = proxies
 		if self.markov and learn:
 			if os.path.exists('markov.learn'):
 				self.markov.add_file('markov.learn')
@@ -39,7 +29,7 @@ class Hecketer():
 	def _ask_reddit(self, text, answers=[]):
 		def reddit_extract(uri):
 			answers = []
-			res = file_get_contents(uri)
+			res = misc.file_get_contents(uri, proxies=self.proxies)
 			contents = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
 			soup = soupify(contents)
 			for script in soup.find_all('script', attrs={'id':'data'}):
@@ -58,7 +48,7 @@ class Hecketer():
 							answers.append(text)
 			return answers
 		urlencoded = urllib.quote_plus(text)
-		res = file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded)
+		res = misc.file_get_contents('https://www.reddit.com/search/?q=%s' %urlencoded, proxies=self.proxies)
 		if res is None: return None
 		contents = '\n'.join( [ a for a in rsparse.find_all_tags(res, 'a') if a.find('/comments/') != -1 ])
 		soup = soupify(contents)
@@ -72,7 +62,7 @@ class Hecketer():
 
 	def _ask_answers(self, text, answers=[]):
 		encoded = text.replace(' ', '_')
-		res = file_get_contents('https://www.answers.com/Q/%s' %encoded)
+		res = misc.file_get_contents('https://www.answers.com/Q/%s' %encoded, proxies=self.proxies)
 		if res is None: return None
 		soup = soupify(res)
 		meta = soup.find('meta', property='og:description')
@@ -82,7 +72,7 @@ class Hecketer():
 
 	def _ask_ddg(self, text, answers=[]):
 		encoded = urllib.quote_plus(text).replace('%20', '+')
-		res = file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''})
+		res = misc.file_get_contents('https://html.duckduckgo.com/html/', postdata={'q': encoded, 'b': ''}, proxies=self.proxies)
 		if res is None: return None
 		contents = '\n'.join([ a for a in rsparse.find_all_tags(res, 'a') ])
 		soup = soupify(contents)
@@ -93,7 +83,7 @@ class Hecketer():
 
 	def _ask_ask(self, text, answers=[]):
 		encoded = urllib.quote_plus(text)
-		res = file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded)
+		res = misc.file_get_contents('https://www.ask.com/web?q=%s&ad=dirN&o=0' % encoded, proxies=self.proxies)
 		if res is None: return None
 		contents = '\n'.join( [ p for p in rsparse.find_all_tags(res, 'p') if p.find('PartialSearchResults-item-abstract') != -1 ])
 		soup = soupify(contents)

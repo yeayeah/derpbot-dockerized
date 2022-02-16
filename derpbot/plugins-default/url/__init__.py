@@ -1,18 +1,13 @@
-import rocksock
-from http2 import RsHttp, _parse_url
 from soup_parser import soupify
 import re
 import time
 import random
+import misc
 
 def _get_url_title(uri, proxies=None):
 	title = None
 	desc = None
-	host, port, ssl, uri = _parse_url(uri)
-	http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
-	if not http.connect(): return None
-	hdr, res = http.get(uri)
-	res = res.encode('utf-8') if isinstance(res, unicode) else res
+	res = misc.file_get_contents(uri, proxies=proxies)
 	soup = soupify(res)
 	title = soup.body.find('title')
 	if title is None: return None, None
@@ -64,12 +59,11 @@ def event_url(arr):
 	split = arr['recv'].split(' ')
 	line =  ' '.join( split[3:] ).lstrip(':')
 	chan = split[2]
-	proxies = None
 	for uri in line.split(' '):
 		if uri.find('://') == -1: continue
 		nuri = _inspect_uri(uri)
 		check = nuri if nuri is not None else uri
-		title, desc = _get_url_title(check, proxies)
+		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
 		if title is None: continue
 		elif nuri is not None: self.irc.privmsg(chan, nuri)
@@ -82,14 +76,13 @@ def action_url(arr):
 	if arr['command'] == 'provides': return ['title', 'ud']
 
 	self = arr['self']
-	proxies = None
 	if arr['command'] == 'title':
 
 		for uri in arr['args']:
 			if uri.find('://') == -1: continue
 			nuri = _inspect_uri(uri)
 			check = nuri if nuri is not None else uri
-			title, desc = _get_url_title(check, proxies)
+			title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
 			if title is None: continue
 			elif nuri is not None: self.irc.privmsg(arr['chan'], nuri)
@@ -101,7 +94,7 @@ def action_url(arr):
 	elif arr['command'] == 'ud':
 		for arg in arr['args']:
 			uri = 'https://www.urbandictionary.com/define.php?term=%s' %arg
-			title, desc = _get_url_title(uri, proxies)
+			title, desc = _get_url_title(uri, proxies=self.args.http_proxy)
 			if title is None or desc is None: continue
 			self.irc.privmsg(arr['chan'], '%s: %s' % (title, desc))
 			time.sleep(0.5)
