@@ -50,11 +50,7 @@ def is_ignored_string(self, chan, string):
 	return False
 
 def is_ignored_nick(self, nick, chan=None):
-	if not chan:
-		for match in self.ignorelist:
-			if re.search(match, nick.lower()): return True
-
-	elif chan in self.settings and 'ignore' in self.settings[chan] and 'nick' in self.settings[chan]['ignore']:
+	if chan in self.settings and 'ignore' in self.settings[chan] and 'nick' in self.settings[chan]['ignore']:
 		for n in self.settings[chan]['ignore']['nicks']:
 			if re.search(n, nick.lower()): return True
 	return False
