@@ -5,25 +5,24 @@ import time
 import misc
 
 def action_plugin(arr):
-	if arr['command'] == 'provides': return ['install', 'load', 'unload', 'reload', 'replace', 'list', 'help']
+	if arr['command'] == 'provides': return ['install', 'load', 'unload', 'reload', 'replace', 'help']
 	self = arr['self']
 
 	if arr['command'] == 'help':
-		if len(arr['args']) > 1:
-			name = arr['args'][1]
-			if name in self.pmlist.keys():
-				return { 'reply': '%s: %s' % (name, ', '.join(self.pmlist[name])), 'self':self }
-		else:
-			for name in self.pmlist.keys():
-				if name is None: continue
-				self.irc.privmsg(arr['chan'], '%s: %s' %(name, ', '.join( self.pmlist[name])))
-				time.sleep(0.3)
+		if len(arr['args']) >= 1:
+			for name in arr['args']:
+				if name in self.pmlist.keys():
+					return { 'reply': '%s: %s' % (name, ', '.join(self.pmlist[name])), 'self':self }
+			return
 
-	elif arr['command'] == 'list':
-		for name in self.pmlist.keys():
-			if name is None: continue
-			self.irc.privmsg(arr['chan'], '%s: %s' %(name, ', '.join( self.pmlist[name])))
-			time.sleep(0.3)
+		else:
+			_plugins = []
+			for name in self.pmlist.keys():
+				if name is not None: _plugins.append(name)
+
+			if len(_plugins):
+				self.irc.privmsg(arr['chan'], 'Available plugins: %s' % ', '.join(_plugins))
+				self.irc.privmsg(arr['chan'], 'Use `help <plugin>` to get a list of actions. Use `<plugin>:<action>` if multiple plugins provide the same actions.')
 
 	elif arr['command'] == 'install' or arr['command'] == 'replace':
 		if get_user_access(self, arr['mask']) > 5: return None
