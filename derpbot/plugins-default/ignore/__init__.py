@@ -12,6 +12,8 @@ def action_ignore(arr):
 	provides = ['add', 'del', 'list']
 	if arr['command'] == 'provides': return provides
 	elif not arr['command'] in provides: return None
+	elif not misc.isop(self, arr['chan'], arr['nick']):
+		if get_user_access(self, arr['mask']) > 10: return None
 
 	_types = [ 'nick', 'string', 'mask' ]
 	self = arr['self']
