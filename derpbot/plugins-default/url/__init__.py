@@ -48,7 +48,7 @@ def _inspect_uri(uri):
 		nuri = uri
 
 	elif re.search('(www.|)youtu.be', uri):
-		uri = 'https://yewtu.be/watch?v=%s' %req
+		uri = 'https://yewtu.be/watch?v=%s' %req.lstrip('/')
 		nuri = uri
 
 	return nuri
