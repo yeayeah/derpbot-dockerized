@@ -36,7 +36,8 @@ class IRC():
 
 	def connect(self):
 		socket = rocksock.Rocksock(host=self.server,port=self.port,ssl=self.ssl,proxies=self.proxies)
-		socket.connect()
+		try: socket.connect()
+		except: return False
 		self.socket = socket
 		self.login()
 
