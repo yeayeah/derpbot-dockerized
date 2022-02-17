@@ -12,7 +12,7 @@ def action_plugin(arr):
 		if len(arr['args']) >= 1:
 			for name in arr['args']:
 				if name in self.pmlist.keys():
-					return { 'reply': '%s: %s' % (name, ', '.join(self.pmlist[name])), 'self':self }
+					return { 'reply': '`%s` provides actions `%s`' % (name, '`, `'.join(self.pmlist[name])), 'self':self }
 			return
 
 		else:
