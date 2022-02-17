@@ -39,7 +39,7 @@ def _inspect_uri(uri):
 	req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
 
 	for elem in uri_replace.keys():
-		if re.match(elem, domain):
+		if re.search(elem, domain):
 			replacement = random.choice( uri_replace[elem] )
 			break
 
@@ -47,7 +47,7 @@ def _inspect_uri(uri):
 		uri = uri.replace(domain, replacement)
 		nuri = uri
 
-	elif re.match('(www.|)youtu.be', uri):
+	elif re.search('(www.|)youtu.be', uri):
 		uri = 'https://yewtu.be/watch?v=%s' %req
 		nuri = uri
 
