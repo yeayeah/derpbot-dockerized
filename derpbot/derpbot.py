@@ -9,6 +9,7 @@ import os
 import random
 import string
 import hecketer
+import misc
 
 class Derpbot():
 	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, args=None):
@@ -141,9 +142,14 @@ class Derpbot():
 			elif split[1] == 'PRIVMSG':
 				chan = split[2]
 				nick, mask = nickmask(split[0])
-				if nick.lower() in self.ignorelist:
+
+				line = split[3:]
+				linestr = ' '.join(line)
+
+				if misc.is_ignored_nick(self, nick) or misc.is_ignored_string(self, chan, linestr):
 					continue
-				elif chan == self.irc.nick:
+
+				if chan == self.irc.nick:
 					if self.ownerkey is None: continue
 					key = split[3][1:]
 					if key == self.ownerkey:
@@ -158,10 +164,8 @@ class Derpbot():
 				#if not nick in self.nicklist[chan]: self.nicklist[chan][nick] = dict()
 				#if 'ignore' in self.nicklist[chan][nick] and self.nicklist[chan][nick]['ignore']: continue
 
-				line = split[3:]
-				linestr = ' '.join(line)
 				# line starts with bot's name
-				if line[0].startswith(':%s' %self.irc.nick):
+				elif line[0].startswith(':%s' %self.irc.nick):
 					command = line[1]
 					args = line[2:] if len(line) > 2 else []
 					bottalk = True
@@ -185,21 +189,20 @@ class Derpbot():
 						if res is not None:
 							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 							if 'self' in res and res['self']: self = res['self']
-						continue
+					continue
 
 				for p in self.pmlist.keys():
 					m = [ i for i in self.pmlist[p] if i.startswith(command) ]
 					if len(m): matches[p] = m
 
 				if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
-					print('running plugin %s' %matches[matches.keys()[0]][0])
 					res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
 					if res is not None:
 						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 						if 'self' in res and res['self'] is not None: self = res['self']
 
 				elif len(matches.keys()) > 1:
-					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer commnad %s' % (nick, ', '.join( matches.keys()), command))
+					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
 					self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
 					
 				# user wants to talk ?

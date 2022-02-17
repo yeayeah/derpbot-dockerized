@@ -4,6 +4,7 @@ from soup_parser import soupify
 import random
 import rsparse
 import json
+import re
 
 def nickmask(data):
 	_, line = data.split(':')
@@ -27,9 +28,22 @@ def file_get_contents(uri, postdata=None, proxies=None):
 def isop(self, chan, nick):
 	return True if 'op' in self.nicklist[chan][nick] else False
 
-def is_ignored_str(self, chan, string):
-	try: ignores = self.settings[chan]['ignore']
+def is_ignored_string(self, chan, string):
+	try: ignores = self.settings[chan]['ignore']['string']
 	except: return False
-	for ignore in ignores:
-		if hasattr(ignore, 'string') and re.match(ignore['string'], string): return True
+	for match in ignores:
+		if re.search(match, string): return True
 	return False
+
+def is_ignored_nick(self, nick, chan=None):
+	if not chan:
+		for match in self.ignorelist:
+			if re.search(match, nick.lower()): return True
+
+	elif chan in self.settings and 'ignore' in self.settings[chan] and 'nick' in self.settings[chan]['ignore']:
+		for n in self.settings[chan]['ignore']['nicks']:
+			if re.search(n, nick.lower()): return True
+	return False
+
+def is_ignored_mask(self, nick, chan=None):
+	pass

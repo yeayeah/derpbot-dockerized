@@ -60,7 +60,7 @@ def event_url(arr):
 	line =  ' '.join( split[3:] ).lstrip(':')
 	chan = split[2]
 	for uri in line.split(' '):
-		if uri.find('://') == -1: continue
+		if uri.find('://') == -1 or misc.is_ignored_string(self, chan, uri): continue
 		nuri = _inspect_uri(uri)
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
