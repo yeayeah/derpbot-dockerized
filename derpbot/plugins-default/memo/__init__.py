@@ -60,10 +60,6 @@ def action_memo(arr):
 			j = d_split[i] * factors[i]
 			delay += j
 
-		self.p_remind[md5sum] = {
-			'expires': time.time() + delay,
-			'message': message,
-			'nick_from': arr['nick']
-		}
+		self.irc.privmsg(chan, message, delay)
 
 		return {'reply': 'Reminder saved.' %md5sum, 'self': self }
