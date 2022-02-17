@@ -10,6 +10,7 @@ import random
 import string
 import hecketer
 import misc
+import time
 
 class Derpbot():
 	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, args=None):
@@ -63,7 +64,7 @@ class Derpbot():
 			except IndexError:
 				continue
 			except Exception as e:
-				print('_loop_events: error (%s)' %e)
+				print('_loop_events(%s): error (%s)' %(p,e))
 				continue
 			if res is None: continue
 			elif 'self' in res: self = res['self']
@@ -82,18 +83,23 @@ class Derpbot():
 
 	def _run(self):
 		self.irc.authed = False
-		self.irc.connect()
+		if self.irc.connect() is False: return
 		while self.running:
 			recv = self.irc.recvline()
 			if recv is False: break
 			split = recv.split(' ')
 
-			self._loop_events(split, recv)
+			foo = self._loop_events(split, recv)
 
 			if split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
+			elif split[1] == '376':
+				if 'SILENCE' in self.irc.servermode.keys():
+					for silence in self.args.silence.split(';'):
+						self.irc.send('SILENCE %s' %silence.strip())
+						time.sleep(0.3)
 
 			elif split[1] == 'INVITE':
 				user, mask = nickmask(split[0])
@@ -220,9 +226,12 @@ class Derpbot():
 			finally: self.pmlist[plugin] = provides
 
 	def stop(self):
+		if self.irc.nick == self.irc.mynick: self._settings_save()
 		threads = [ t for t in self.threads if t.is_alive() ]
 		for t in threads: t.join()
-		if self.irc: self.irc.send('QUIT :leaving')
+		if self.irc:
+			try: self.irc.send('QUIT :leaving')
+			except Exception as e: print(repr(e))
 		self.running = False
 		self.connected = False
 
@@ -266,7 +275,7 @@ if __name__ == '__main__':
 	parser.add_argument('--auth', help="define username/password to identify to. format 'username password'", type=str, default=None, required=False)
 	parser.add_argument('--irc_proxy', help="proxy/ies to use/chain for IRC connections. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
 	parser.add_argument('--http_proxy', help="proxy/ies to use/chain for HTTP(s) connections. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
-	parser.add_argument('--ignore', help="user;separated;list of nicknames to ignore globally", type=str, default=None, required=False)
+	parser.add_argument('--silence', help="user;separated;list of nicknames to ignore globally", type=str, default=None, required=False)
 	parser.add_argument('--triggerchar', help="trigger char (default: !)", type=str, default='!', required=False)
 
 	args = parser.parse_args()
@@ -281,7 +290,7 @@ if __name__ == '__main__':
 		args.irc_proxy = os.getenv('IRC_PROXY', None)
 		args.http_proxy = os.getenv('HTTP_PROXY', None)
 		args.triggerchar = os.getenv('TRIGGERCHAR', '!')
-		args.ignore = os.getenv('IGNORE', None)
+		args.silence = os.getenv('SILENCE', None)
 
 	if not os.path.exists('data/%s' %args.server):
 		try:
