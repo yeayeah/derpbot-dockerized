@@ -30,6 +30,7 @@ class Hecketer():
 		def reddit_extract(uri):
 			answers = []
 			res = misc.file_get_contents(uri, proxies=self.proxies)
+			if res is None: return None
 			contents = '\n'.join([ script for script in rsparse.find_all_tags(res, 'script') ])
 			soup = soupify(contents)
 			for script in soup.find_all('script', attrs={'id':'data'}):
@@ -96,19 +97,26 @@ class Hecketer():
 		answers = []
 		random.shuffle(self.sites)
 
+		## FIXME: try to understand why sometimes reddit fails with
+		## 'NoneType' object is not iterable
+
 		for site in self.sites:
 
 			if site == 'reddit':
-				answers = self._ask_reddit(text, answers)
+				try: answers = self._ask_reddit(text, answers)
+				except: answers = []
 
 			elif site == 'answers':
-				answers = self._ask_answers(text, answers)
+				try: answers = self._ask_answers(text, answers)
+				except: answers = []
 
 			elif site == 'ddg':
-				answers = self._ask_ddg(text, answers)
+				try: answers = self._ask_ddg(text, answers)
+				except: answers = []
 
 			elif site == 'ask':
-				answers = self._ask_ask(text, answers)
+				try: answers = self._ask_ask(text, answers)
+				except: answers = []
 
 			if answers is None: answers = []
 			elif len(answers) and self.return_asap: break

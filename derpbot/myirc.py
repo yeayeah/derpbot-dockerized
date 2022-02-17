@@ -98,7 +98,7 @@ class IRC():
 			self.identify(method='b64')
 		# sasl not supported, fallback to nickserv auth
 		elif recv.find('CAP %s NAK :sasl' %self.nick) != -1:
-			self.identfy(method='nickserv')
+			self.identify(method='nickserv')
 		# ignore other lines not starting with ':'
 		elif recv[0] != ':': return None
 

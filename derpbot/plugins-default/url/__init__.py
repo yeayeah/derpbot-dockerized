@@ -39,7 +39,7 @@ def _inspect_uri(uri):
 	req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
 
 	for elem in uri_replace.keys():
-		if re.match(elem, domain):
+		if re.search(elem, domain):
 			replacement = random.choice( uri_replace[elem] )
 			break
 
@@ -47,7 +47,7 @@ def _inspect_uri(uri):
 		uri = uri.replace(domain, replacement)
 		nuri = uri
 
-	elif re.match('(www.|)youtu.be', uri):
+	elif re.search('(www.|)youtu.be', uri):
 		uri = 'https://yewtu.be/watch?v=%s' %req
 		nuri = uri
 
@@ -60,7 +60,7 @@ def event_url(arr):
 	line =  ' '.join( split[3:] ).lstrip(':')
 	chan = split[2]
 	for uri in line.split(' '):
-		if uri.find('://') == -1: continue
+		if uri.find('://') == -1 or misc.is_ignored_string(self, chan, uri): continue
 		nuri = _inspect_uri(uri)
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
