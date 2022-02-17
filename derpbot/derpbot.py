@@ -22,16 +22,15 @@ class Derpbot():
 		self.irc = None
 		self.ssl = ssl
 		self.auth = auth
-		self.irc_proxy = args.irc_proxy
-		self.http_proxy = args.http_proxy
+		self.args.irc_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.irc_proxy.split(';') ] if args.irc_proxy else None
+		self.args.http_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.http_proxy.split(';') ] if args.http_proxy else None
 		self.triggerchar = triggerchar
 		self.datadir = 'data/%s' %self.server
 		self.running = True
 		self.threads = []
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
-		self.hecketer = hecketer.Hecketer(learn=True, proxies=self.http_proxy)
-		self.ignorelist = [] if args.ignore is None else [i.strip().lower() for i in args.ignore.split(';')]
+		self.hecketer = hecketer.Hecketer(learn=True, proxies=self.args.http_proxy)
 		self.nicklist = dict()
 		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
@@ -49,7 +48,7 @@ class Derpbot():
 		else: self.pmlist = dict()
 
 		self._settings_load()
-		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.irc_proxy, self.auth)
+		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.args.irc_proxy, self.auth)
 
 		while self.running:
 			self._run()
@@ -291,8 +290,6 @@ if __name__ == '__main__':
 			print('ERROR: cannot create "data/%s" directory' %args.server)
 			raise
 
-	args.irc_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.irc_proxy.split(';') ] if args.irc_proxy else None
-	args.http_proxy = [ rocksock.RocksockProxyFromURL(i.strip()) for i in args.http_proxy.split(';') ] if args.http_proxy else None
 	derp = Derpbot(server=args.server, port=args.port, nick=args.nick, chan=args.chan, ssl=args.use_ssl, auth=args.auth, triggerchar=args.triggerchar, args=args)
 
 	try: derp.run()
