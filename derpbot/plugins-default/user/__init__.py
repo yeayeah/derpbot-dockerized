@@ -15,7 +15,7 @@ def action_user(arr):
 		if get_user_access(self, username) is not None: return {'reply': 'error, conflicting user `username`.' }
 		with open('%s/access' %self.datadir, 'a') as h:
 			h.write('%s %s\n' % (username, level))
-			return {'reply': 'User `%s` added with level `%s`.' % (username, level))}
+			return {'reply': 'User `%s` added with level `%s`.' % (username, level)}
 
 	elif arr['command'] == 'del':
 		with open('%s/access'% self.datadir, 'r') as r:
