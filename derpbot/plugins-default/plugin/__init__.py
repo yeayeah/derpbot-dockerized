@@ -12,7 +12,7 @@ def action_plugin(arr):
 		if len(arr['args']) >= 1:
 			for name in arr['args']:
 				if name in self.pmlist.keys():
-					return { 'reply': '%s: %s' % (name, ', '.join(self.pmlist[name])), 'self':self }
+					return { 'reply': '`%s` provides actions `%s`' % (name, '`, `'.join(self.pmlist[name])), 'self':self }
 			return
 
 		else:
@@ -34,32 +34,31 @@ def action_plugin(arr):
 			res = misc.file_get_contents(plugin, proxies=self.args.http_proxy)
 		else:
 			if not os.path.exists('plugins-available/%s/__init__.py' %plugin):
-				return {'reply': 'error; plugin "%s" does not exist', 'self': self }
+				return {'reply': 'error; plugin `%s` does not exist', 'self': self }
 			with open('plugins-available/%s/__init__.py'%plugin, 'r') as r:
 				res = ''.join( r.readlines() )
 
 		if not os.path.exists('plugins/%s' %name): os.makedirs('plugins/%s' %name)
 		with open('plugins/%s/__init__.py' %name, 'w') as h: h.write(res)
-		return {'reply': 'plugin "%s" (re)installed as "%s"' % (plugin, name), 'self': self }
+		return {'reply': 'plugin `%s` (re)installed as `%s`' % (plugin, name), 'self': self }
 
 	elif arr['command'] == 'load':
 		if get_user_access(self, arr['mask']) > 5: return None
 		elif not len(arr['args']): return {'reply': 'error; use: plugin:load <name>' }
 		for name in arr['args']:
-			print('going with plugin "%s"' %name)
-			if not os.path.exists('plugins/%s' %name): return {'reply': 'error: plugin "%s" not found'%name }
-			elif name in self.pmlist: return  {'reply': 'plugin "%s" already loaded; you might want to use `plugin:reload`?' }
+			if not os.path.exists('plugins/%s' %name): return {'reply': 'error: plugin `%s` not found'%name }
+			elif name in self.pmlist: return  {'reply': 'plugin `%s` already loaded; you might want to use `plugin:reload`?' }
 			try: self.pm.load_plugin(name)
-			except Exception as e: return {'reply': 'error; cannot load plugin "%s" (%s)' % (name, e) }
+			except Exception as e: return {'reply': 'error; cannot load plugin `%s` (%s)' % (name, e) }
 
 			try: provides = self.pm.execute_action_hook(name, { 'command': 'provides', 'self': self })
 			except: provides = [ name ]
 			finally: self.pmlist[name] = provides
-		return {'reply': 'plugin "%s" provides "%s"' %(name, ', '.join(provides)), 'self': self }
+		return {'reply': 'plugin `%s` provides `%s`' %(name, '`, `'.join(provides)), 'self': self }
 
 	elif arr['command'] == 'unload':
 		if get_user_access(self, arr['mask']) > 5: return None
-		elif not len(arr['args']) >= 1: return {'reply': 'error; use: plugin:load <name>' }
+		elif not len(arr['args']) >= 1: return {'reply': 'error; use: `plugin:unload <name>`' }
 		for name in arr['args']:
 			if name in self.pmlist:
 				self.pm.unload_plugin(name)
@@ -68,7 +67,7 @@ def action_plugin(arr):
 		
 	elif arr['command'] == 'reload':
 		if get_user_access(self, arr['mask']) > 5: return None
-		elif not len(arr['args']) >= 1: return {'reply': 'error; use: plugin:reload <name>' }
+		elif not len(arr['args']) >= 1: return {'reply': 'error; use: `plugin:reload <name>`' }
 		for name in arr['args']:
 			if name in self.pmlist: 
 				self.pm.unload(name)

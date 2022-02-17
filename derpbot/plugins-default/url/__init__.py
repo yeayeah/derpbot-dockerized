@@ -5,9 +5,13 @@ import random
 import misc
 
 def _get_url_title(uri, proxies=None):
+	filetype = misc.file_get_contents_type(uri, proxies=proxies)
+	if not filetype: return None, None
+	elif filetype.lower().find('html') == -1: return None, None
 	title = None
 	desc = None
 	res = misc.file_get_contents(uri, proxies=proxies)
+	if res is None: return None, None
 	soup = soupify(res)
 	title = soup.body.find('title')
 	if title is None: return None, None
@@ -48,7 +52,7 @@ def _inspect_uri(uri):
 		nuri = uri
 
 	elif re.search('(www.|)youtu.be', uri):
-		uri = 'https://yewtu.be/watch?v=%s' %req
+		uri = 'https://yewtu.be/watch?v=%s' %req.lstrip('/')
 		nuri = uri
 
 	return nuri
