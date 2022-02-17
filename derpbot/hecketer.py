@@ -97,6 +97,9 @@ class Hecketer():
 		answers = []
 		random.shuffle(self.sites)
 
+		## FIXME: try to understand why sometimes reddit fails with
+		## 'NoneType' object is not iterable
+
 		for site in self.sites:
 
 			if site == 'reddit':
