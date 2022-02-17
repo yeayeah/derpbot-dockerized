@@ -1,19 +1,20 @@
-version: "3"
+version: "3.2"
 services:
   derpbot:
     user: 998:996
-    image: 192.168.20.1:5000/sabotage-python
+    image: 192.168.20.1:5000/sabotage-python:latest
     volumes:
-      - derpbot-plugins:/home/derpbot/plugins
-      - derpbot-data:/home/derpbot/data
+      - derpbot-plugins:/home/derpbot/plugins:rw
+      - derpbot-data:/home/derpbot/data:rw
     environment:
       - SERVER=irc.libera.chat
       - PORT=6697
       - SSL=1
-      - NICK=derpyderp
+      - NICK=derpbot
       - AUTH=derpbot Sv1obu3BjPHvEgpo4pd9Xq1tsW+ReKAB
-      - CHAN=##derpbot,#/pol/
+      - CHAN=##derpbot,#/pol/,##feed
       - HTTP_PROXY=socks5://192.168.20.1:9050
+#      - IRC_PROXY=socks5://192.168.20.1:9050
       - TRIGGERCHAR=;
 
 volumes:
