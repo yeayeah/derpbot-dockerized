@@ -36,7 +36,8 @@ class IRC():
 
 	def connect(self):
 		socket = rocksock.Rocksock(host=self.server,port=self.port,ssl=self.ssl,proxies=self.proxies)
-		socket.connect()
+		try: socket.connect()
+		except: return False
 		self.socket = socket
 		self.login()
 
@@ -107,6 +108,16 @@ class IRC():
 		else:
 			split = recv.split(' ')
 			if split[1] == '001': pass
+			# server modes
+			elif split[1] == '005':
+				if not hasattr(self, 'servermode'): self.servermode = dict()
+				for i in split[3:]:
+					if i[0] == ':': break
+					elif i.find('=') != -1: item, value = i.split('=')
+					else: item, value = [i, 1]
+					self.servermode[item] = value
+				return None
+
 			elif split[1] == '372': return None
 			# ping/pong game
 			elif split[1] == 'PONG': self.send('PING :%s' %self.nick, 5)

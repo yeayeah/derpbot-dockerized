@@ -12,7 +12,7 @@ def action_plugin(arr):
 		if len(arr['args']) >= 1:
 			for name in arr['args']:
 				if name in self.pmlist.keys():
-					return { 'reply': '`%s` provides actions `%s`' % (name, '`, `'.join(self.pmlist[name])), 'self':self }
+					return { 'reply': '`%s` provides actions `%s`.' % (name, '`, `'.join(self.pmlist[name])), 'self':self }
 			return
 
 		else:
@@ -21,7 +21,7 @@ def action_plugin(arr):
 				if name is not None: _plugins.append(name)
 
 			if len(_plugins):
-				self.irc.privmsg(arr['chan'], 'Plugins: `%s`' % '`, `'.join(_plugins))
+				self.irc.privmsg(arr['chan'], 'Plugins: `%s`.' % '`, `'.join(_plugins))
 				self.irc.privmsg(arr['chan'], 'Use `help <plugin>` to get a list of actions. Use `<plugin>:<action>` if multiple plugins provide the same action.')
 
 	elif arr['command'] == 'install' or arr['command'] == 'replace':

@@ -26,15 +26,16 @@ def file_get_contents_type(uri, proxies=None):
 	host, port, ssl, uri = _parse_url(uri)
 	http = RsHttp(host,ssl=ssl,port=port, keep_alive=True, follow_redirects=True, auto_set_cookies=True, proxies=proxies, user_agent='Mozilla/5.0 (Windows NT 6.1; rv:60.0) Gecko/20100101 Firefox/60.0')
 	try: http.connect()
-	except Exception as e: return None
+	except Exception as e:
+		if hasattr(e, 'message'): print('fgct: %s' %e.message)
+		else: print('fgct: %s' %e)
+		return None
 	res = http.head(uri)
 	if res is None: return None
 	if isinstance(res, unicode): res = res.encode('utf-8')
 	for line in res.split('\n'):
-		print('line: "%s"' %line)
 		try: item, value = line.split(':')
 		except: continue
-		print('item: %s, value: %s' % (item, value))
 		if item.strip().lower() == 'content-type': return value.strip()
 	return None
 
@@ -49,11 +50,7 @@ def is_ignored_string(self, chan, string):
 	return False
 
 def is_ignored_nick(self, nick, chan=None):
-	if not chan:
-		for match in self.ignorelist:
-			if re.search(match, nick.lower()): return True
-
-	elif chan in self.settings and 'ignore' in self.settings[chan] and 'nick' in self.settings[chan]['ignore']:
+	if chan in self.settings and 'ignore' in self.settings[chan] and 'nick' in self.settings[chan]['ignore']:
 		for n in self.settings[chan]['ignore']['nicks']:
 			if re.search(n, nick.lower()): return True
 	return False
