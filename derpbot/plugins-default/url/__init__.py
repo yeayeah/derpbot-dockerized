@@ -57,14 +57,30 @@ def _inspect_uri(uri):
 
 	return nuri
 
+def _update_self(self, chan):
+	if not hasattr(self, 'settings'): self.settings = dict()
+	if not chan in self.settings: self.settings[chan] = dict()
+	if not 'p_url' in self.settings[chan]: self.settings[chan]['p_url'] = []
+	return self
+
 def event_url(arr):
+	if arr['event'] != 'PRIVMSG': return None
 	self = arr['self']
-	if self.irc.nick != self.irc.mynick: return
+	if self.irc.nick != self.irc.mynick: return None
 	split = arr['recv'].split(' ')
-	line =  ' '.join( split[3:] ).lstrip(':')
 	chan = split[2]
+	self = _update_self(self, chan)
+	line =  ' '.join( split[3:] ).lstrip(':')
 	for uri in line.split(' '):
-		if uri.find('://') == -1 or misc.is_ignored_string(self, chan, uri): continue
+		if uri.find('://') == -1: continue
+		domain = uri.split('/')[2]
+		if domain.find('/') != -1: domain, _ = domain.split('/')
+		skip = False
+		for rgx in self.settings[chan]['p_url']:
+			if not re.search(rgx, uri): continue
+			skip = True
+			break
+		if skip: continue
 		nuri = _inspect_uri(uri)
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
@@ -77,26 +93,52 @@ def event_url(arr):
 		time.sleep(0.5)
 
 def action_url(arr):
-	if arr['command'] == 'provides': return ['title', 'ud']
+	provides = ['title', 'ud', 'ignore', 'unignore']
+	if arr['command'] == 'provides': return provides
+	elif not arr['command'] in provides: return
 
-	self = arr['self']
+	chan = arr['chan']
+	nick = arr['nick']
+	self = _update_self(arr['self'], chan)
 	if arr['command'] == 'title':
 
 		for uri in arr['args']:
 			if uri.find('://') == -1: continue
+			_,_, domain = uri.split('/')
+			if domain.find('/') != -1: domain, _ = domain.split('/')
+			skip = False
+			for rgx in self.settings[chan]['p_url']:
+				if not re.search(rgx, uri): continue
+				skip = True
+				break
+			if skip: continue
 			nuri = _inspect_uri(uri)
 			check = nuri if nuri is not None else uri
 			title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
 			if title is None: continue
-			elif nuri is not None: self.irc.privmsg(arr['chan'], nuri)
+			elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-			if desc is None: self.irc.privmsg(arr['chan'], '^ %s' % title)
-			else: self.irc.privmsg(arr['chan'], '^ %s //%s' % (title, desc))
+			if desc is None: self.irc.privmsg(chan, '^ %s' % title)
+			else: self.irc.privmsg(chan, '^ %s //%s' % (title, desc))
 			time.sleep(0.5)
+		return None
 
 	elif arr['command'] == 'ud':
 		arg = '+'.join(arr['args'])
 		uri = 'https://www.urbandictionary.com/define.php?term=%s' %arg
 		_, desc = _get_url_title(uri, proxies=self.args.http_proxy)
-		if desc: self.irc.privmsg(arr['chan'], '%s' % desc)
+		if desc: self.irc.privmsg(chan, '%s' % desc)
+		return None
+
+	elif arr['command'] == 'ignore':
+		added = []
+		foo = [ i for i  in arr['args'][1:] if not i in self.settings[chan]['p_url'] ]
+		if len(foo):
+			self.settings[chan]['p_url'].extend(foo)
+			self.irc.privmsg(chan, 'ignore(add): `%s`' % '`, `'.join( foo ))
+			
+	elif arr['command'] == 'unignore':
+		self.settings[chan]['p_url'] = [ i for i in self.settings[chan]['p_url'] if not i in arr['args'] ]
+
+	return {'self': self}
