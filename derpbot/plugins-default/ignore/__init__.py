@@ -27,12 +27,12 @@ def action_ignore(arr):
 		for t in args:
 			if not t in self.settings[chan]['ignore']: continue
 			elements = [ i for i in self.settings[chan]['ignore'][t] ]
-			if len(elements): self.irc.privmsg(chan, '%s: %s' % (t, ','.join( elements )))
+			if len(elements): self.irc.privmsg(chan, '`%s`: `%s`' % (t, '`, `'.join( elements )))
 			time.sleep(0.5)
 		return {'self': self}
 
 	if len(arr['args']) < 2: return {'reply': 'Error, needs arguments.'}
-	elif not arr['args'][0] in _types: return {'reply': 'Unknown ignore type "%s". (avail: nick, string, mask)'}
+	elif not arr['args'][0] in _types: return {'reply': 'Unknown ignore type `%s`. (avail: `nick`, `string`, `mask`)'}
 
 	_type = arr['args'][0]
 	elements = arr['args'][1:]
@@ -46,7 +46,7 @@ def action_ignore(arr):
 			self.settings[chan]['ignore'][_type].append(element)
 			added.append( element )
 
-		if len(added): self.irc.privmsg(arr['chan'], 'ignore(%s): added %s' % (_type, ','.join(added)))
+		if len(added): self.irc.privmsg(arr['chan'], '`%s`: added `%s`' % (_type, ','.join(added)))
 
 	elif arr['command'] == 'del':
 		#if len(arr['args']) < 2: return
@@ -56,6 +56,6 @@ def action_ignore(arr):
 				del(self.settings[chan]['ignore'][_type][element])
 				deleted.append(element)
 
-		if len(deleted): self.irc.privmsg(arr['chan'], 'ignore(%s): deleted %s' % (_type, ','.join(added)))
+		if len(deleted): self.irc.privmsg(arr['chan'], '`%s`: deleted `%s`' % (_type, '`, `'.join(added)))
 
 	return {'self': self}

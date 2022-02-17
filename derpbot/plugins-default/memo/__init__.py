@@ -16,7 +16,7 @@ def event_memo(arr):
 		for md5 in self.p_tell.keys():
 			_array = self.p_tell[md5]
 			if _array['nick_to'] != nick: continue
-			self.irc.notice(nick, '%s said:' % _array['nick_from'])
+			self.irc.notice(nick, '`%s` said:' % _array['nick_from'])
 			self.irc.notice(nick, _array['message'])
 			remove.append(md5)
 	
@@ -44,7 +44,7 @@ def action_memo(arr):
 			'ticks': time.time()
 		}
 
-		return {'reply': 'Message "%s" saved.' %md5sum, 'self': self }
+		return {'reply': 'Message saved.' %md5sum, 'self': self }
 	
 	elif arr['command'] == 'remind':
 		if not hasattr(self, 'p_remind'): self.p_remind = dict()
@@ -66,4 +66,4 @@ def action_memo(arr):
 			'nick_from': arr['nick']
 		}
 
-		return {'reply': 'Remind "%s" saved.' %md5sum, 'self': self }
+		return {'reply': 'Reminder saved.' %md5sum, 'self': self }
