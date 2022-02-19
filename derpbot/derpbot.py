@@ -96,10 +96,11 @@ class Derpbot():
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 			elif split[1] == '376':
-				if 'SILENCE' in self.irc.servermode.keys():
-					for silence in self.args.silence.split(';'):
-						self.irc.send('SILENCE %s' %silence.strip())
-						time.sleep(0.3)
+				if self.args.silence is not None:
+					if 'SILENCE' in self.irc.servermode.keys():
+						for silence in self.args.silence.split(';'):
+							self.irc.send('SILENCE %s' %silence.strip())
+							time.sleep(0.3)
 
 			elif split[1] == 'INVITE':
 				user, mask = nickmask(split[0])
