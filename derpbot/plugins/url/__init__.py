@@ -5,26 +5,25 @@ import random
 import misc
 
 def _get_url_title(uri, proxies=None):
+	def _format(string):
+		string = string.encode('utf-8') if isinstance(string, unicode) else string
+		string = string.replace('\n', ' ')
+		return string
+
 	filetype = misc.file_get_contents_type(uri, proxies=proxies)
 	if not filetype or filetype.lower().find('html') == -1: return None, None
-	title = None
-	desc = None
+
 	res = misc.file_get_contents(uri, proxies=proxies)
-	if res is None: return None, None
+	if not res: return None, None
+	else: title, desc = (None, None)
+
 	soup = soupify(res)
-	try:
-		title = soup.body.find('title').get_text()
-		title = title.encode('utf-8') if isinstance(title, unicode) else title
-		title = title.replace('\n', ' ')
-	except:
-		return None, None
+	try: title = _format(soup.body.find('title').get_text())
+	except: pass
 
 	d = soup.find('meta', property='og:description')
 	desc = d['content'] if d else None
-	if desc:
-		if isinstance(desc, unicode): desc = desc.encode('utf-8')
-		desc = desc.replace('\n', ' ')
-
+	if desc: desc = _format(desc)
 	return title, desc
 
 def _inspect_uri(uri):
