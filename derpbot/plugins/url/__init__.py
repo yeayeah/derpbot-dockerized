@@ -83,11 +83,11 @@ def event_url(arr):
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
-		if title is None: continue
+		if desc is None and title is None: continue
 		elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-		if desc is None: self.irc.privmsg(chan, '^ %s' % title)
-		else: self.irc.privmsg(chan, '^ %s //%s' % (title, desc))
+		j = desc if desc is not None else title
+		self.irc.privmsg(chan, '^ %s' %j)
 		time.sleep(0.5)
 
 def action_url(arr):
