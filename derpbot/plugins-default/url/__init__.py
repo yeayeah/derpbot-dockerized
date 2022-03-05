@@ -139,8 +139,8 @@ def action_url(arr):
 		elif arr['args'][0] == 'del':
 			self.settings[chan]['p_url'] = [ i for i in self.settings[chan]['p_url'] if not i in arr['args'][1:] ]
 
-		elif arr['args'][0) == 'list':
+		elif arr['args'][0] == 'list':
 			_l = [ i for i in self.settings[chan]['p_url'] ]
-			if len(_l): self.irc.privmsg(chan, '`%s`' % '`, `'.join(_l)))
+			if len(_l): self.irc.privmsg(chan, '`%s`' % '`, `'.join(_l))
 
 	return {'self': self, 'reply': 'Ok.'}
