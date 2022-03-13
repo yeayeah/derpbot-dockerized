@@ -5,28 +5,25 @@ import random
 import misc
 
 def _get_url_title(uri, proxies=None):
-	filetype = misc.file_get_contents_type(uri, proxies=proxies)
-	if not filetype: return None, None
-	elif filetype.lower().find('html') == -1: return None, None
-	title = None
-	desc = None
-	res = misc.file_get_contents(uri, proxies=proxies)
-	if res is None: return None, None
-	soup = soupify(res)
-	title = soup.body.find('title')
-	if title is None: return None, None
-	title = title.get_text()
-	if title is None: return None, None
+	def _format(string):
+		string = string.encode('utf-8') if isinstance(string, unicode) else string
+		string = string.replace('\n', ' ')
+		return string
 
-	title = title.encode('utf-8') if isinstance(title, unicode) else title
-	title = title.replace('\n', ' ')
+	filetype = misc.file_get_contents_type(uri, proxies=proxies)
+	if not filetype or filetype.lower().find('html') == -1: return None, None
+
+	res = misc.file_get_contents(uri, proxies=proxies)
+	if not res: return None, None
+	else: title, desc = (None, None)
+
+	soup = soupify(res)
+	try: title = _format(soup.body.find('title').get_text())
+	except: pass
 
 	d = soup.find('meta', property='og:description')
 	desc = d['content'] if d else None
-	if desc:
-		if isinstance(desc, unicode): desc = desc.encode('utf-8')
-		desc = desc.replace('\n', ' ')
-
+	if desc: desc = _format(desc)
 	return title, desc
 
 def _inspect_uri(uri):
@@ -85,15 +82,15 @@ def event_url(arr):
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
-		if title is None: continue
+		if desc is None and title is None: continue
 		elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-		if desc is None: self.irc.privmsg(chan, '^ %s' % title)
-		else: self.irc.privmsg(chan, '^ %s //%s' % (title, desc))
+		j = desc if desc is not None else title
+		self.irc.privmsg(chan, '^ %s' %j)
 		time.sleep(0.5)
 
 def action_url(arr):
-	provides = ['title', 'ud', 'ignore', 'unignore']
+	provides = ['title', 'ud', 'ignore']
 	if arr['command'] == 'provides': return provides
 	elif not arr['command'] in provides: return
 
@@ -132,13 +129,17 @@ def action_url(arr):
 		return None
 
 	elif arr['command'] == 'ignore':
-		added = []
-		foo = [ i for i  in arr['args'][1:] if not i in self.settings[chan]['p_url'] ]
-		if len(foo):
-			self.settings[chan]['p_url'].extend(foo)
-			self.irc.privmsg(chan, 'ignore(add): `%s`' % '`, `'.join( foo ))
-			
-	elif arr['command'] == 'unignore':
-		self.settings[chan]['p_url'] = [ i for i in self.settings[chan]['p_url'] if not i in arr['args'] ]
+		if arr['args'][0] == 'add':
+			added = []
+			foo = [ i for i  in arr['args'][1:] if not i in self.settings[chan]['p_url'] ]
+			if len(foo):
+				self.settings[chan]['p_url'].extend(foo)
 
-	return {'self': self}
+		elif arr['args'][0] == 'del':
+			self.settings[chan]['p_url'] = [ i for i in self.settings[chan]['p_url'] if not i in arr['args'][1:] ]
+
+		elif arr['args'][0] == 'list':
+			_l = [ i for i in self.settings[chan]['p_url'] ]
+			if len(_l): self.irc.privmsg(chan, '`%s`' % '`, `'.join(_l))
+
+	return {'self': self, 'reply': 'Ok.'}

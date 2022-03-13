@@ -77,14 +77,14 @@ class IRC():
 		# user!ident@host privmsg #dest :<data>
 		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('privmsg') + len(dest) + 4)
 		if delay == 0: self.socket.send('PRIVMSG %s :%s\n' %(dest, message[:avail]))
-		else: threading.Timer(delay, self.privmsg, message, 0).start()
+		else: threading.Timer(delay, self.privmsg, (dest, message, 0)).start()
 
 	def notice(self, dest, message, delay=0):
 		avail = 512
 		# user!ident@host notice #dest :<data>
 		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('notice') + len(dest) + 4)
 		if delay == 0: self.socket.send('NOTICE %s :%s\n' %(dest, message[:avail]))
-		else: threading.Timer(delay, self.notice, message, 0).start()
+		else: threading.Timer(delay, self.notice, (dest, message, 0)).start()
 
 	def parse(self, recv):
 		print('> %s' %recv)
