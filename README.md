@@ -1,6 +1,6 @@
 Acquire rootfs using
 
-	$ wget http://pkg.comploti.st/rootfs-stage2-2022-02-19_x86_64-stripped.tar.xz -O rootfs.tar.xz
+	$ wget http://pkg.comploti.st/rootfs-stage2-2022-03-13_x86_64-stripped.tar.xz -O rootfs.tar.xz
 
 Build image using
 
