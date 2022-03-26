@@ -116,8 +116,7 @@ def action_url(arr):
 			if title is None: continue
 			elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-			if desc is None: self.irc.privmsg(chan, '^ %s' % title)
-			else: self.irc.privmsg(chan, '^ %s //%s' % (title, desc))
+			self.irc.privmsg(chan, '^ %s' % title)
 			time.sleep(0.5)
 		return None
 
