@@ -85,7 +85,7 @@ def event_url(arr):
 		if desc is None and title is None: continue
 		elif nuri is not None: self.irc.privmsg(chan, nuri)
 
-		j = desc if desc is not None else title
+		j = title if title is not None else desc
 		self.irc.privmsg(chan, '^ %s' %j)
 		time.sleep(0.5)
 
