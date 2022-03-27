@@ -59,15 +59,7 @@ class Derpbot():
 	def _loop_events(self, split, recv):
 
 		for p in self.pmlist:
-			try:
-				res = self.pm.execute_event_hook(p, {'event': split[1], 'recv': recv, 'self': self })
-			except IndexError:
-				continue
-			except Exception as e:
-				print('_loop_events(%s): error (%s)' %(p,e))
-				continue
-			if res is None: continue
-			elif 'self' in res: self = res['self']
+			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
 
 	def _build_nicklist(self, chan, nicks):
 		if not chan in self.nicklist: self.nicklist[chan] = dict()
