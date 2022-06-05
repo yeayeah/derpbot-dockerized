@@ -1,8 +1,8 @@
-from derpbot import get_user_access
 import os
 import plugins
 import time
 import misc
+import users
 
 def action_plugin(arr):
 	if arr['command'] == 'provides': return ['install', 'load', 'unload', 'reload', 'replace', 'help']
@@ -25,7 +25,7 @@ def action_plugin(arr):
 				self.irc.privmsg(arr['chan'], 'Use `help <plugin>` to get a list of actions. Use `<plugin>:<action>` if multiple plugins provide the same action.')
 
 	elif arr['command'] == 'install' or arr['command'] == 'replace':
-		if get_user_access(self, arr['mask']) > 5: return None
+		if users.get_user_access(self, arr['mask']) > 5: return None
 		if len(arr['args']) < 3 or arr['args'][1].find('as') == -1: return {'reply': 'error; use: plugin:install <url> as <name>', 'self': self }
 		name = arr['args'][2]
 		if arr['command'] == 'install' and os.path.exists('plugins/%s' %name): return  {'reply': 'error: plugin with same name exists; you might want to use `plugin:replace`?', 'self': self }
@@ -43,7 +43,7 @@ def action_plugin(arr):
 		return {'reply': 'plugin `%s` (re)installed as `%s`' % (plugin, name), 'self': self }
 
 	elif arr['command'] == 'load':
-		if get_user_access(self, arr['mask']) > 5: return None
+		if users.get_user_access(self, arr['mask']) > 5: return None
 		elif not len(arr['args']): return {'reply': 'error; use: plugin:load <name>' }
 		for name in arr['args']:
 			if not os.path.exists('plugins/%s' %name): return {'reply': 'error: plugin `%s` not found'%name }
@@ -57,7 +57,7 @@ def action_plugin(arr):
 		return {'reply': 'plugin `%s` provides `%s`' %(name, '`, `'.join(provides)), 'self': self }
 
 	elif arr['command'] == 'unload':
-		if get_user_access(self, arr['mask']) > 5: return None
+		if users.get_user_access(self, arr['mask']) > 5: return None
 		elif not len(arr['args']) >= 1: return {'reply': 'error; use: `plugin:unload <name>`' }
 		for name in arr['args']:
 			if name in self.pmlist:
@@ -66,7 +66,7 @@ def action_plugin(arr):
 		return {'res': 'Success, i guess.', 'self': self }
 		
 	elif arr['command'] == 'reload':
-		if get_user_access(self, arr['mask']) > 5: return None
+		if users.get_user_access(self, arr['mask']) > 5: return None
 		elif not len(arr['args']) >= 1: return {'reply': 'error; use: `plugin:reload <name>`' }
 		for name in arr['args']:
 			if name in self.pmlist: 

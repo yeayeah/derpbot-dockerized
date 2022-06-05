@@ -1,18 +1,18 @@
-from derpbot import get_user_access
 import os
 import plugins
+import users
 
 def action_user(arr):
 	if arr['command'] == 'provides': return ['add', 'del', 'list']
 	self = arr['self']
-	if get_user_access(self, arr['mask']) > 5: return None
+	if users.get_user_access(self, arr['mask']) > 5: return None
 
 	if not os.path.exists('%s/access' % self.datadir):
 		self.irc.privmsg(arr['chan'], 'Error: no access file..')
 
 	elif arr['command'] == 'add':
 		username, level = arr['args']
-		if get_user_access(self, username) is not None: return {'reply': 'error, conflicting user `username`.' }
+		if users.get_user_access(self, username) is not None: return {'reply': 'error, conflicting user `username`.' }
 		with open('%s/access' %self.datadir, 'a') as h:
 			h.write('%s %s\n' % (username, level))
 			return {'reply': 'User `%s` added with level `%s`.' % (username, level)}

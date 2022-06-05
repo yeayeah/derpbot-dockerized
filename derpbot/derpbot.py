@@ -11,6 +11,7 @@ import string
 import hecketer
 import misc
 import time
+import users
 
 class Derpbot():
 	def __init__(self, server, port, nick, chan, triggerchar='!', ssl=False, auth=None, args=None):
@@ -83,63 +84,10 @@ class Derpbot():
 
 			foo = self._loop_events(split, recv)
 
-			if split[1] == '001':
-				if not os.path.exists('%s/access' %self.datadir):
-					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
-					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
-			elif split[1] == '376':
-				if self.args.silence is not None:
-					if 'SILENCE' in self.irc.servermode.keys():
-						for silence in self.args.silence.split(';'):
-							self.irc.send('SILENCE %s' %silence.strip())
-							time.sleep(0.3)
-
-			elif split[1] == 'INVITE':
-				user, mask = nickmask(split[0])
-				if get_user_access(self, mask) > 5: continue
-				self.irc.send('JOIN %s' %split[3].lstrip(':'))
-
-			elif split[1] == 'JOIN':
-				chan = split[2].lstrip(':')
-				nick, mask = nickmask(split[0])
-				if split[0].startswith(':%s!' % self.irc.nick): self.nicklist[chan] = dict()
-				else: self.nicklist[chan][nick] = dict()
-
-			elif split[1] == 'PART':
-				chan = split[2].lstrip(':')
-				nick, mask = nickmask(split[0])
-				del( self.nicklist[chan][nick] )
-
-			elif split[1] == 'QUIT':
-				nick, mask = nickmask(split[0])
-				for chan in self.nicklist:
-					if chan[0] == '#':
-						if nick in self.nicklist[chan]: del( self.nicklist[chan][nick] )
-
-			elif split[1] == 'KICK':
-				chan = split[2].lstrip(':')
-				kicked = split[3]
-				if kicked == self.irc.nick: del( self.nicklist[chan] )
-				else: del( self.nicklist[chan][kicked] )
-
-			elif split[1] == 'NICK':
-				nick, mask = nickmask(split[0])
-				newnick = split[2]
-				for chan in self.nicklist:
-					if chan[0] == '#':
-						if not nick in self.nicklist[chan]: continue
-						self.nicklist[chan][newnick] = self.nicklist[chan].pop(nick)
-
-			# getting nicklist
-			elif split[1] == '353':
-				chan = split[4]
-				nicks = [ n for n in ' '.join( split[5:]).lstrip(':').split(' ') ]
-				self._build_nicklist(chan=chan, nicks=nicks)
-
 			# bot command ?
-			elif split[1] == 'PRIVMSG':
+			if split[1] == 'PRIVMSG':
 				chan = split[2]
-				nick, mask = nickmask(split[0])
+				nick, mask = misc.nickmask(split[0])
 
 				line = split[3:]
 				linestr = ' '.join(line)
@@ -158,12 +106,8 @@ class Derpbot():
 							self.ownerkey = None
 					continue
 
-				#if not chan in self.nicklist: self.nicklist[chan] = dict()
-				#if not nick in self.nicklist[chan]: self.nicklist[chan][nick] = dict()
-				#if 'ignore' in self.nicklist[chan][nick] and self.nicklist[chan][nick]['ignore']: continue
-
 				# line starts with bot's name
-				elif line[0].startswith(':%s' %self.irc.nick):
+				if line[0].startswith(':%s' %self.irc.nick):
 					command = line[1]
 					args = line[2:] if len(line) > 2 else []
 					bottalk = True
@@ -174,7 +118,6 @@ class Derpbot():
 					command = line[0][1:].strip( self.triggerchar )
 					args = line[1:] if len(line) > 1 else []
 					bottalk = False
-
 				# nothing for the bot
 				else: continue
 
@@ -205,10 +148,63 @@ class Derpbot():
 					
 				# user wants to talk ?
 				elif bottalk:
-					text = ' '.join( line[1:] )
-					reply = self.hecketer.ask(text)
+					reply = self.hecketer.ask(' '.join( line[1:] ))
 					if reply is not None:
 						self.irc.privmsg(chan, '%s: %s' % (nick, reply))
+
+			elif split[1] == '001':
+				if not os.path.exists('%s/access' %self.datadir):
+					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
+					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
+			elif split[1] == '376':
+				if self.args.silence is not None:
+					if 'SILENCE' in self.irc.servermode.keys():
+						for silence in self.args.silence.split(';'):
+							self.irc.send('SILENCE %s' %silence.strip())
+							time.sleep(0.3)
+
+			elif split[1] == 'INVITE':
+				user, mask = misc.nickmask(split[0])
+				if users.get_user_access(self, mask) > 5: continue
+				self.irc.send('JOIN %s' %split[3].lstrip(':'))
+
+			elif split[1] == 'JOIN':
+				chan = split[2].lstrip(':')
+				nick, mask = misc.nickmask(split[0])
+				if split[0].startswith(':%s!' % self.irc.nick): self.nicklist[chan] = dict()
+				else: self.nicklist[chan][nick] = dict()
+
+			elif split[1] == 'PART':
+				chan = split[2].lstrip(':')
+				nick, mask = misc.nickmask(split[0])
+				del( self.nicklist[chan][nick] )
+
+			elif split[1] == 'QUIT':
+				nick, mask = misc.nickmask(split[0])
+				for chan in self.nicklist:
+					if chan[0] == '#':
+						if nick in self.nicklist[chan]: del( self.nicklist[chan][nick] )
+
+			elif split[1] == 'KICK':
+				chan = split[2].lstrip(':')
+				kicked = split[3]
+				if kicked == self.irc.nick: del( self.nicklist[chan] )
+				else: del( self.nicklist[chan][kicked] )
+
+			elif split[1] == 'NICK':
+				nick, mask = misc.nickmask(split[0])
+				newnick = split[2]
+				for chan in self.nicklist:
+					if chan[0] == '#':
+						if not nick in self.nicklist[chan]: continue
+						self.nicklist[chan][newnick] = self.nicklist[chan].pop(nick)
+
+			# getting nicklist
+			elif split[1] == '353':
+				chan = split[4]
+				nicks = [ n for n in ' '.join( split[5:]).lstrip(':').split(' ') ]
+				self._build_nicklist(chan=chan, nicks=nicks)
+
 
 	def load_plugins(self):
 		self.pmlist = dict()
@@ -219,7 +215,7 @@ class Derpbot():
 			finally: self.pmlist[plugin] = provides
 
 	def stop(self):
-		if self.irc.nick == self.irc.mynick: self._settings_save()
+		if self.irc.nick and self.irc.nick == self.irc.mynick: self._settings_save()
 		threads = [ t for t in self.threads if t.is_alive() ]
 		for t in threads: t.join()
 		if self.irc:
@@ -242,19 +238,6 @@ class Derpbot():
 			res = None
 		finally:
 			return res
-
-def get_user_access(self, mask):
-	if not os.path.isfile('data/%s/access' % self.server): return 9999
-	with open('data/%s/access' %self.server, 'r') as h:
-		for l in h.readlines():
-			l = l.strip()
-			host, access = l.split(' ')
-			if mask.find(host) != -1: return int(access)
-	return 999999
-
-def nickmask(data):
-	_, line = data.split(':')
-	return line.split('!')
 
 if __name__ == '__main__':
 	if not os.path.exists('plugins/plugin'): os.popen('cp -r plugins-default/* plugins/')

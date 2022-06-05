@@ -1,5 +1,5 @@
-from derpbot import get_user_access
 import misc
+import users
 
 def event_opmodes(arr):
 	if arr['event'] == 'JOIN':
@@ -7,7 +7,7 @@ def event_opmodes(arr):
 		split = arr['recv'].split(' ')
 		chan = split[2].lstrip(':')
 		nick, mask = misc.nickmask(split[0])
-		access = get_user_access(self, mask)
+		access = users.get_user_access(self, mask)
 		if access is None: return
 		elif access <= 10: self.irc.send('MODE %s +o %s' % (chan,nick))
 		elif access <= 20: self.irc.send('MODE %s +v %s' % (chan,nick))
@@ -19,7 +19,7 @@ def action_opmodes(arr):
 
 	# if user doesnt have op access
 	if not misc.isop(self, arr['chan'], arr['nick']):
-		access = get_user_access(self, arr['mask'])
+		access = users.get_user_access(self, arr['mask'])
 		if access > 10: return None
 	
 	if arr['args'] is not None and len(arr['args']): args = arr['args']
@@ -46,4 +46,3 @@ def action_opmodes(arr):
 	nicks = ' '.join(args)
 	self.irc.socket.send('MODE %s %s%s %s\n' % (chan, sign, modes, nicks))
 	return None
-
