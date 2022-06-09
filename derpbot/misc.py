@@ -7,7 +7,7 @@ from http2 import RsHttp, _parse_url
 from soup_parser import soupify
 
 def nickmask(data):
-	return data[:1].split('!')
+	return data[1:].split('!')
 
 def file_get_contents(uri, postdata=None, proxies=None):
 	host, port, ssl, uri = _parse_url(uri)
