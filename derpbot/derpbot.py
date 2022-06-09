@@ -74,6 +74,14 @@ class Derpbot():
 
 			self.nicklist[chan][nick] = _dict
 
+    def is_new_owner(self, split):
+        key = split[3][1:]
+        if key == self.ownerkey:
+            if not os.path.exists('%s/access' %self.datadir):
+                with open('%s/access' %self.datadir, 'w') as h:
+                    h.write('%s 0\n' %mask)
+                self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
+                self.ownerkey = None
 	def _run(self):
 		self.irc.authed = False
 		if self.irc.connect() is False: return
@@ -96,14 +104,7 @@ class Derpbot():
 					continue
 
 				if chan == self.irc.nick:
-					if self.ownerkey is None: continue
-					key = split[3][1:]
-					if key == self.ownerkey:
-						if not os.path.exists('%s/access' %self.datadir):
-							with open('%s/access' %self.datadir, 'w') as h:
-								h.write('%s 0\n' %mask)
-							self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
-							self.ownerkey = None
+					if self.ownerkey is not None: self.is_new_owner(split)
 					continue
 
 				# line starts with bot's name
@@ -124,13 +125,15 @@ class Derpbot():
 				# check if plugin needs to be run
 				matches = {}
 				if command.find(':') != -1:
-					plugin, command = command.split(':')
-					if plugin in self.pmlist.keys():
-						res = self.run_plugin(nick, chan, mask, plugin, command, args)
-						if res is not None:
-							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-							if 'self' in res and res['self']: self = res['self']
-					continue
+                    try:
+                        plugin, command = command.split(':')
+                        if not plugin in self.pmlist.keys(): continue
+                        res = self.run_plugin(nick, chan, mask, plugin, command, args)
+                        if res is not None:
+                            if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
+                            if 'self' in res and res['self']: self = res['self']
+                    except: pass
+                    finally: continue
 
 				for p in self.pmlist.keys():
 					m = [ i for i in self.pmlist[p] if i.startswith(command) ]
@@ -215,7 +218,7 @@ class Derpbot():
 			finally: self.pmlist[plugin] = provides
 
 	def stop(self):
-		if self.irc.nick and self.irc.nick == self.irc.mynick: self._settings_save()
+		if self.irc and self.irc.nick == self.irc.mynick: self._settings_save()
 		threads = [ t for t in self.threads if t.is_alive() ]
 		for t in threads: t.join()
 		if self.irc:
@@ -279,7 +282,5 @@ if __name__ == '__main__':
 
 	try: derp.run()
 	except KeyboardInterrupt: pass
-	except Exception as e:
-		if hasattr(e, 'message'): print('error: %s' %e.message)
-		else: print('error: %s' %e)
+    except: raise
 	finally: derp.stop()
