@@ -206,8 +206,8 @@ class Derpbot():
 				else: del( self.nicklist[chan][kicked] )
 
 			elif split[1] == 'NICK':
-				nick, mask = misc.nickmask(split[0])
-				newnick = split[2]
+				nick = split[0][1:]
+				newnick = split[2][1:]
 				for chan in self.nicklist:
 					if chan[0] == '#':
 						if not nick in self.nicklist[chan]: continue
