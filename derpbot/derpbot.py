@@ -74,7 +74,7 @@ class Derpbot():
 
 			self.nicklist[chan][nick] = _dict
 
-	def is_new_owner(self, split):
+	def is_new_owner(self, split, nick, mask):
 		key = split[3][1:]
 		if key == self.ownerkey:
 			if not os.path.exists('%s/access' %self.datadir):
@@ -104,7 +104,7 @@ class Derpbot():
 					continue
 
 				if chan == self.irc.nick:
-					if self.ownerkey is not None: self.is_new_owner(split)
+					if self.ownerkey is not None: self.is_new_owner(split, nick, mask)
 					continue
 
 				# line starts with bot's name
