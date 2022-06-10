@@ -1,7 +1,7 @@
 *pyc
 derpbot.yaml
 docker-compose.yaml
-markov.learn
+*.learn
 __pycache__
 *.tar.xz
 data/
