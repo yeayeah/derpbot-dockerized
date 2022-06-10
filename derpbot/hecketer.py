@@ -121,7 +121,9 @@ class Hecketer():
 			if answers is None: answers = []
 			elif len(answers) and self.return_asap: break
 
-		if answers is None or not len(answers): return None
+		if answers is None or not len(answers):
+			answer = [ ' '.join( self.markov.generate_text() ) ]
+
 		elif self.markov:
 			for answer in answers: self.markov.add_string(answer)
 
@@ -140,7 +142,6 @@ if __name__ == "__main__":
 		try:
 			user_input = raw_input('Input: ')
 			reply = heck.ask(user_input)
-			if reply is None: reply = ' '.join( heck.markov.generate_text() )
 			print('> %s' %reply)
 
 		except KeyboardInterrupt:
