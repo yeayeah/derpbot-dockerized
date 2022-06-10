@@ -82,6 +82,43 @@ class Derpbot():
 					h.write('%s 0\n' %mask)
 				self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
 				self.ownerkey = None
+
+	def extract_command(self, line):
+		# line starts with bot's name
+		if line[0].startswith(':%s' %self.irc.nick):
+			command = line[1]
+			args = line[2:] if len(line) > 2 else []
+			bottalk = True
+		# line starts with !command
+		elif line[0].startswith(':%s' %self.triggerchar):
+			# ignore if we are not the main bot
+			if self.irc.mynick != self.irc.nick: return None, None, None
+			command = line[0][1:].strip( self.triggerchar )
+			args = line[1:] if len(line) > 1 else []
+			bottalk = False
+		# nothing for the bot
+		else: return None, None, None
+		return command, args, bottalk
+
+	def get_matching_commands(self, command):
+		matches = {}
+		if command.find(':') != -1:
+			try:
+				plugin, command = command.split(':')
+				if not plugin in self.pmlist.keys(): return {}
+				res = self.run_plugin(nick, chan, mask, plugin, command, args)
+				if res is not None:
+					if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
+					if 'self' in res and res['self']: self = res['self']
+					return True
+			except: pass
+			return {}
+
+		for p in self.pmlist.keys():
+			m = [ i for i in self.pmlist[p] if i.startswith(command) ]
+			if len(m): matches[p] = m
+		return matches
+
 	def _run(self):
 		self.irc.authed = False
 		if self.irc.connect() is False: return
@@ -107,43 +144,19 @@ class Derpbot():
 					if self.ownerkey is not None: self.is_new_owner(split, nick, mask)
 					continue
 
-				# line starts with bot's name
-				if line[0].startswith(':%s' %self.irc.nick):
-					command = line[1]
-					args = line[2:] if len(line) > 2 else []
-					bottalk = True
-				# line starts with !command
-				elif line[0].startswith(':%s' %self.triggerchar):
-					# ignore if we are not the main bot
-					if self.irc.mynick != self.irc.nick: continue
-					command = line[0][1:].strip( self.triggerchar )
-					args = line[1:] if len(line) > 1 else []
-					bottalk = False
-				# nothing for the bot
-				else: continue
+				command, args, bottalk = self.extract_command(line)
+				if not command and not bottalk: continue
 
-				# check if plugin needs to be run
-				matches = {}
-				if command.find(':') != -1:
-					try:
-						plugin, command = command.split(':')
-						if not plugin in self.pmlist.keys(): continue
-						res = self.run_plugin(nick, chan, mask, plugin, command, args)
-						if res is not None:
-							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-							if 'self' in res and res['self']: self = res['self']
-					except: pass
-					continue
+				matches = self.get_matching_commands(command)
 
-				for p in self.pmlist.keys():
-					m = [ i for i in self.pmlist[p] if i.startswith(command) ]
-					if len(m): matches[p] = m
+				# command has already been executed
+				if matches is True: continue
 
-				if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
+				elif len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
 					res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
 					if res is not None:
-						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 						if 'self' in res and res['self'] is not None: self = res['self']
+						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 
 				elif len(matches.keys()) > 1:
 					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
