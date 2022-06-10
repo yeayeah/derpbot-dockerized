@@ -74,14 +74,14 @@ class Derpbot():
 
 			self.nicklist[chan][nick] = _dict
 
-    def is_new_owner(self, split):
-        key = split[3][1:]
-        if key == self.ownerkey:
-            if not os.path.exists('%s/access' %self.datadir):
-                with open('%s/access' %self.datadir, 'w') as h:
-                    h.write('%s 0\n' %mask)
-                self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
-                self.ownerkey = None
+	def is_new_owner(self, split):
+		key = split[3][1:]
+		if key == self.ownerkey:
+			if not os.path.exists('%s/access' %self.datadir):
+				with open('%s/access' %self.datadir, 'w') as h:
+					h.write('%s 0\n' %mask)
+				self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
+				self.ownerkey = None
 	def _run(self):
 		self.irc.authed = False
 		if self.irc.connect() is False: return
@@ -125,15 +125,15 @@ class Derpbot():
 				# check if plugin needs to be run
 				matches = {}
 				if command.find(':') != -1:
-                    try:
-                        plugin, command = command.split(':')
-                        if not plugin in self.pmlist.keys(): continue
-                        res = self.run_plugin(nick, chan, mask, plugin, command, args)
-                        if res is not None:
-                            if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-                            if 'self' in res and res['self']: self = res['self']
-                    except: pass
-                    finally: continue
+					try:
+						plugin, command = command.split(':')
+						if not plugin in self.pmlist.keys(): continue
+						res = self.run_plugin(nick, chan, mask, plugin, command, args)
+						if res is not None:
+							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
+							if 'self' in res and res['self']: self = res['self']
+					except: pass
+					continue
 
 				for p in self.pmlist.keys():
 					m = [ i for i in self.pmlist[p] if i.startswith(command) ]
@@ -282,5 +282,5 @@ if __name__ == '__main__':
 
 	try: derp.run()
 	except KeyboardInterrupt: pass
-    except: raise
+	except: raise
 	finally: derp.stop()
