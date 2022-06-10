@@ -131,7 +131,7 @@ class IRC():
 				_, self.hostname = split[3].split('@')
 			elif split[1] == '903':
 				self.socket.send('JOIN %s\n' %self.chan)
-			elif split[1] == '376':
+			elif split[1] == '376' or split[1] == '422':
 				# initiate ping/pong game
 				self.socket.send('PING :%s\n' % self.nick)
 				# initiate sasl auth
