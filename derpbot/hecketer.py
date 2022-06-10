@@ -19,7 +19,7 @@ class Hecketer():
 		self.sites = ['answers', 'reddit', 'ddg', 'ask']
 		self.markov = cc_markov.MarkovChain() if markov else None
 		self.proxies = proxies
-		if self.markov and learn:
+		if self.markov and self.learn:
 			if os.path.exists('markov.learn'):
 				self.markov.add_file('markov.learn')
 
