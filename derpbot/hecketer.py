@@ -20,8 +20,10 @@ class Hecketer():
 		self.markov = cc_markov.MarkovChain() if markov else None
 		self.proxies = proxies
 		if self.markov and self.learn:
-			if os.path.exists('markov.learn'):
-				self.markov.add_file('markov.learn')
+			if os.path.exists('learn'):
+				for f in [ f for f in os.listdir('learn') if f.endswith('.learn') ]:
+					print('learning %s/%s' % ('learn', f))
+					self.markov.add_file('%s/%s' % ('learn', f))
 
 	def set_sites(self, sites):
 		self.sites = [ i.strip() for i in str(sites).split(',') ]
