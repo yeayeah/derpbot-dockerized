@@ -52,13 +52,11 @@ class Derpbot():
 		self._settings_load()
 		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.args.irc_proxy, self.auth)
 
-		while self.running:
-			self._run()
+		while self.running: self._run()
 
 		_settings_save()
 
 	def _loop_events(self, split, recv):
-
 		for p in self.pmlist:
 			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
 
