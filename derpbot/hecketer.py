@@ -122,10 +122,7 @@ class Hecketer():
 			elif len(answers) and self.return_asap: break
 
 		if answers is None or not len(answers):
-			answer = [ ' '.join( self.markov.generate_text() ) ]
-
-		elif self.markov:
-			for answer in answers: self.markov.add_string(answer)
+			answers = [ ' '.join( self.markov.generate_text() ) ]
 
 		return random.choice(answers)
 
