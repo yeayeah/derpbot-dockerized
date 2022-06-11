@@ -6,6 +6,33 @@ import re
 from http2 import RsHttp, _parse_url
 from soup_parser import soupify
 
+def _inspect_uri(uri):
+	nuri = None
+	replacement = None
+	uri_replace = {
+		'(www.|)youtube.com': ['yewtu.be'],
+		'(www.|)reddit.com': ['libredd.it'],
+		'(www.|)twitter.com': ['nitter.net', 'nitter.fdn.fr', 'nitter.pussthecat.org'],
+	}
+
+	split = uri.split('/')
+	domain = split[2]
+	req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
+
+	for elem in uri_replace.keys():
+		if re.search(elem, domain):
+			replacement = random.choice( uri_replace[elem] )
+			break
+
+	if replacement:
+		uri = uri.replace(domain, replacement)
+		nuri = uri
+
+	elif re.search('(www.|)youtu.be', uri):
+		uri = 'https://yewtu.be/watch?v=%s' %req.lstrip('/')
+		nuri = uri
+
+	return nuri
 def nickmask(data):
 	return data[1:].split('!')
 
