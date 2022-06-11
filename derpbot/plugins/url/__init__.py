@@ -26,34 +26,6 @@ def _get_url_title(uri, proxies=None):
 	if desc: desc = _format(desc)
 	return title, desc
 
-def _inspect_uri(uri):
-	nuri = None
-	replacement = None
-	uri_replace = {
-		'(www.|)youtube.com': ['yewtu.be'],
-		'(www.|)reddit.com': ['libredd.it'],
-		'(www.|)twitter.com': ['nitter.net', 'nitter.fdn.fr', 'nitter.pussthecat.org'],
-	}
-
-	split = uri.split('/')
-	domain = split[2]
-	req = '/' if len(split) <= 3 else '/%s' % '/'.join(split[3:])
-
-	for elem in uri_replace.keys():
-		if re.search(elem, domain):
-			replacement = random.choice( uri_replace[elem] )
-			break
-
-	if replacement:
-		uri = uri.replace(domain, replacement)
-		nuri = uri
-
-	elif re.search('(www.|)youtu.be', uri):
-		uri = 'https://yewtu.be/watch?v=%s' %req.lstrip('/')
-		nuri = uri
-
-	return nuri
-
 def _update_self(self, chan):
 	if not hasattr(self, 'settings'): self.settings = dict()
 	if not chan in self.settings: self.settings[chan] = dict()
@@ -78,7 +50,7 @@ def event_url(arr):
 			skip = True
 			break
 		if skip: continue
-		nuri = _inspect_uri(uri)
+		nuri = misc._inspect_uri(uri)
 		check = nuri if nuri is not None else uri
 		title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
@@ -109,7 +81,7 @@ def action_url(arr):
 				skip = True
 				break
 			if skip: continue
-			nuri = _inspect_uri(uri)
+			nuri = misc._inspect_uri(uri)
 			check = nuri if nuri is not None else uri
 			title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
