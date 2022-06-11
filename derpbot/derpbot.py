@@ -157,7 +157,7 @@ class Derpbot():
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
-			elif split[1] == '376':
+			elif split[1] == '376' or split[1] == '422':
 				if self.args.silence is not None:
 					if 'SILENCE' in self.irc.servermode.keys():
 						for silence in self.args.silence.split(';'):
