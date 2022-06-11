@@ -103,12 +103,7 @@ class Derpbot():
 		if command.find(':') != -1:
 			try:
 				plugin, command = command.split(':')
-				if not plugin in self.pmlist.keys(): return {}
-				res = self.run_plugin(nick, chan, mask, plugin, command, args)
-				if res is not None:
-					if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-					if 'self' in res and res['self']: self = res['self']
-					return True
+				if plugin in self.pmlist.keys(): return { plugin: [command] }
 			except: pass
 			return {}
 
@@ -143,24 +138,16 @@ class Derpbot():
 					continue
 
 				command, args, bottalk = self.extract_command(line)
-				if not command and not bottalk: continue
-
-				matches = self.get_matching_commands(command)
-
-				# command has already been executed
-				if matches is True: continue
-
-				elif len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
-					res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
-					if res is not None:
-						if 'self' in res and res['self'] is not None: self = res['self']
-						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-
-				elif len(matches.keys()) > 1:
-					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
-					self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
-					
-				# user wants to talk ?
+				if command:
+					matches = self.get_matching_commands(command)
+					if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
+						res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
+						if res is not None:
+							if 'self' in res and res['self'] is not None: self = res['self']
+							if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
+					elif len(matches.keys()) > 1:
+						self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
+						self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
 				elif bottalk:
 					reply = self.hecketer.ask(' '.join( line[1:] ))
 					if reply is not None:
