@@ -158,6 +158,8 @@ class Derpbot():
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 			elif split[1] == '376' or split[1] == '422':
+				if self.args.oper is not None:
+					self.irc.send('OPER %s' %self.args.oper)
 				if self.args.silence is not None:
 					if 'SILENCE' in self.irc.servermode.keys():
 						for silence in self.args.silence.split(';'):
@@ -254,6 +256,7 @@ if __name__ == '__main__':
 	parser.add_argument('--http_proxy', help="proxy/ies to use/chain for HTTP(s) connections. Format: sock4://127.0.0.1:9050,http://1.2.3.4:8080,...", type=str, default=None, required=False)
 	parser.add_argument('--silence', help="user;separated;list of nicknames to ignore globally", type=str, default=None, required=False)
 	parser.add_argument('--triggerchar', help="trigger char (default: !)", type=str, default='!', required=False)
+	parser.add_argument('--oper', help="provide oper user password", type=str, default=None, required=False)
 
 	args = parser.parse_args()
 
@@ -268,6 +271,7 @@ if __name__ == '__main__':
 		args.http_proxy = os.getenv('HTTP_PROXY', None)
 		args.triggerchar = os.getenv('TRIGGERCHAR', '!')
 		args.silence = os.getenv('SILENCE', None)
+		args.oper = os.getenv('OPER', None)
 
 	if not os.path.exists('data/%s' %args.server):
 		try:
