@@ -33,7 +33,7 @@ def _update_self(self, chan):
 	if not 'p_url' in self.settings[chan]: self.settings[chan]['p_url'] = []
 	return self
 
-def __process_to_chan(uri, chan, self):
+def __process_to_chan(uri, chan, self, nuri):
 	title, desc = _get_url_title(uri, proxies=self.args.http_proxy)
 
 	if desc is None and title is None: return
@@ -65,7 +65,7 @@ def event_url(arr):
 		if skip: continue
 		nuri = misc._inspect_uri(uri)
 		check = nuri if nuri is not None else uri
-		threading.Timer(0, __process_to_chan, args=(uri=check, chan=chan, self=self)).start()
+		threading.Timer(0, __process_to_chan, args=(check, chan, self, nuri)).start()
 
 def action_url(arr):
 	provides = ['title', 'ud', 'ignore']
