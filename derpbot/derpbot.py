@@ -33,8 +33,6 @@ class Derpbot():
 		self.ownerkey = None
 		self.pm = plugins.PluginManager('./plugins') if os.path.isdir('./plugins') else None
 		self.hecketer = hecketer.Hecketer(learn=True, proxies=self.args.http_proxy)
-		self.nicklist = dict()
-		#self.events = { '001': [], 'JOIN': [], 'PRIVMSG': [], 'NOTICE': [], 'INVITE': [] }
 
 	def _settings_load(self):
 		fp = os.path.join(self.datadir, 'settings.json')
@@ -50,7 +48,7 @@ class Derpbot():
 		else: self.pmlist = dict()
 
 		self._settings_load()
-		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.args.irc_proxy, self.auth)
+		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.args.irc_proxy, self.auth, oper=self.args.oper, silence=self.args.silence)
 
 		while self.running: self._run()
 
@@ -59,18 +57,6 @@ class Derpbot():
 	def _loop_events(self, split, recv):
 		for p in self.pmlist:
 			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
-
-	def _build_nicklist(self, chan, nicks):
-		if not chan in self.nicklist: self.nicklist[chan] = dict()
-		modes = {'@': 'op', '%': 'halfop', '+': 'voice'}
-		for nick in nicks:
-			_dict = dict()
-			for mode in modes:
-				if nick.find(mode) != -1:
-					nick = nick.replace( mode, '', True)
-					_dict[ modes[mode] ] = True
-
-			self.nicklist[chan][nick] = _dict
 
 	def is_new_owner(self, split, nick, mask):
 		key = split[3][1:]
@@ -157,56 +143,6 @@ class Derpbot():
 				if not os.path.exists('%s/access' %self.datadir):
 					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
-			elif split[1] == '376' or split[1] == '422':
-				if self.args.oper is not None:
-					self.irc.send('OPER %s' %self.args.oper)
-				if self.args.silence is not None:
-					if 'SILENCE' in self.irc.servermode.keys():
-						for silence in self.args.silence.split(';'):
-							self.irc.send('SILENCE %s' %silence.strip())
-							time.sleep(0.3)
-
-			elif split[1] == 'INVITE':
-				user, mask = misc.nickmask(split[0])
-				if users.get_user_access(self, mask) > 5: continue
-				self.irc.send('JOIN %s' %split[3].lstrip(':'))
-
-			elif split[1] == 'JOIN':
-				chan = split[2].lstrip(':')
-				nick, mask = misc.nickmask(split[0])
-				if split[0].startswith(':%s!' % self.irc.nick): self.nicklist[chan] = dict()
-				else: self.nicklist[chan][nick] = dict()
-
-			elif split[1] == 'PART':
-				chan = split[2].lstrip(':')
-				nick, mask = misc.nickmask(split[0])
-				del( self.nicklist[chan][nick] )
-
-			elif split[1] == 'QUIT':
-				nick, mask = misc.nickmask(split[0])
-				for chan in self.nicklist:
-					if chan[0] == '#':
-						if nick in self.nicklist[chan]: del( self.nicklist[chan][nick] )
-
-			elif split[1] == 'KICK':
-				chan = split[2].lstrip(':')
-				kicked = split[3]
-				if kicked == self.irc.nick: del( self.nicklist[chan] )
-				else: del( self.nicklist[chan][kicked] )
-
-			elif split[1] == 'NICK':
-				nick = split[0][1:]
-				newnick = split[2][1:]
-				for chan in self.nicklist:
-					if chan[0] == '#':
-						if not nick in self.nicklist[chan]: continue
-						self.nicklist[chan][newnick] = self.nicklist[chan].pop(nick)
-
-			# getting nicklist
-			elif split[1] == '353':
-				chan = split[4]
-				nicks = [ n for n in ' '.join( split[5:]).lstrip(':').split(' ') ]
-				self._build_nicklist(chan=chan, nicks=nicks)
 
 
 	def load_plugins(self):
