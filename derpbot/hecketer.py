@@ -125,6 +125,9 @@ class Hecketer():
 
 		if answers is None or not len(answers):
 			answers = [ ' '.join( self.markov.generate_text() ) ]
+		elif self.markov:
+			for answer in answers:
+				self.markov.add_string(answer)
 
 		return random.choice(answers)
 
