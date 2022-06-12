@@ -135,9 +135,7 @@ class Derpbot():
 					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
 					self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
 				elif bottalk:
-					reply = self.hecketer.ask(' '.join( line[1:] ))
-					if reply is not None:
-						self.irc.privmsg(chan, '%s: %s' % (nick, reply))
+					threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
 
 			elif split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):

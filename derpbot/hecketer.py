@@ -95,7 +95,7 @@ class Hecketer():
 			if reply is not None and not reply.endswith('...'): answers.append(reply)
 		return answers if len(answers) else None
 
-	def ask(self, text):
+	def ask(self, privmsg, chan, nick, text):
 		answers = []
 		random.shuffle(self.sites)
 
@@ -129,7 +129,7 @@ class Hecketer():
 			for answer in answers:
 				self.markov.add_string(answer)
 
-		return random.choice(answers)
+		privmsg(chan, '%s: %s' % (nick, random.choice(answers)))
 
 	def check_reply(self, reply):
 		if isinstance(reply, unicode): reply = reply.encode('utf-8')
