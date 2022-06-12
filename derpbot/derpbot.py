@@ -119,7 +119,7 @@ class Derpbot():
 				if misc.is_ignored_nick(self, nick) or misc.is_ignored_string(self, chan, linestr):
 					continue
 
-				if chan == self.irc.nick:
+				elif chan == self.irc.nick:
 					if self.ownerkey is not None: self.is_new_owner(split, nick, mask)
 					continue
 
@@ -141,7 +141,7 @@ class Derpbot():
 
 			elif split[1] == '001':
 				if not os.path.exists('%s/access' %self.datadir):
-					self.ownerkey = ''.join( random.sample( string.letters, 10 ))
+					self.ownerkey = ''.join( random.sample( string.letters, 20 ))
 					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 
 
