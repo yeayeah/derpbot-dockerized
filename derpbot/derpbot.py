@@ -86,6 +86,7 @@ class Derpbot():
 
 	def get_matching_commands(self, command):
 		matches = {}
+		if not command: return matches
 		if command.find(':') != -1:
 			try:
 				plugin, command = command.split(':')
