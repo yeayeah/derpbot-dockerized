@@ -66,7 +66,7 @@ def file_get_contents_type(uri, proxies=None):
 	return None
 
 def isop(self, chan, nick):
-	return True if 'op' in self.nicklist[chan][nick] else False
+	return True if 'op' in self.irc.nicklist[chan][nick] else False
 
 def is_ignored_string(self, chan, string):
 	try: ignores = self.settings[chan]['ignore']['string']
