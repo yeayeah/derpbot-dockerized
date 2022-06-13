@@ -6,11 +6,11 @@ import re
 from http2 import RsHttp, _parse_url
 from soup_parser import soupify
 
-def _inspect_uri(uri):
+def _sanitize_uri(uri):
 	nuri = None
 	replacement = None
 	uri_replace = {
-		'(www.|)youtube.com': ['yewtu.be'],
+		'(www.|)youtube.com': ['yewtu.be', 'invidious.weblibre.org', 'invidious.flokinet.to', 'invidious.lunar.icu'],
 		'(www.|)reddit.com': ['libredd.it'],
 		'(www.|)twitter.com': ['nitter.net', 'nitter.fdn.fr', 'nitter.pussthecat.org'],
 	}
