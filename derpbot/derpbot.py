@@ -58,6 +58,31 @@ class Derpbot():
 		for p in self.pmlist:
 			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
 
+	def parse_privmsg(self, recv, split, chan, nick, mask, line):
+		command, args, bottalk = self.extract_command(line)
+		matches = self.get_matching_commands(command)
+		if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
+			res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
+			if res is not None:
+				if 'self' in res and res['self'] is not None: self = res['self']
+				if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
+		elif len(matches.keys()) > 1:
+			self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
+			self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
+		elif bottalk:
+			threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
+
+	def parse_admin(self, line, nick, mask):
+		command = line[0][1:].lower()
+
+		if command == 'owner' and len(line) > 1:
+			if self.ownerkey is not None:
+				self.is_new_owner(line[1].strip(), nick, mask)
+		pass
+
+	def parse_notice(self, recv, split, nick, mask, line):
+		pass
+
 	def is_new_owner(self, key, nick, mask):
 		if key == self.ownerkey:
 			if not os.path.exists('%s/access' %self.datadir):
