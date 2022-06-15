@@ -34,7 +34,7 @@ def _sanitize_uri(uri):
 
 	return nuri
 def nickmask(data):
-	return data[1:].split('!')
+	return (data[1:], None) if not '!' in data else data[1:].split('!')
 
 def file_get_contents(uri, postdata=None, proxies=None):
 	host, port, ssl, uri = _parse_url(uri)
