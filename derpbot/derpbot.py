@@ -58,8 +58,7 @@ class Derpbot():
 		for p in self.pmlist:
 			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
 
-	def is_new_owner(self, split, nick, mask):
-		key = split[3][1:]
+	def is_new_owner(self, key, nick, mask):
 		if key == self.ownerkey:
 			if not os.path.exists('%s/access' %self.datadir):
 				with open('%s/access' %self.datadir, 'w') as h:
