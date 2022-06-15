@@ -104,7 +104,7 @@ class IRC():
 			self.nicklist[chan][nick] = _dict
 
 	def parse(self, recv):
-		print('> %s' %recv)
+		print('> %s' %repr(recv))
 		#if recv.startswith(':%s!' % self.nick): return None
 		# clean disconnect
 		if recv.startswith('ERROR'): return False
