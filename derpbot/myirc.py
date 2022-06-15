@@ -119,108 +119,108 @@ class IRC():
 		# sasl not supported, fallback to nickserv auth
 		elif recv.find('CAP %s NAK :sasl' %self.nick) != -1:
 			self.identify(method='nickserv')
-		# parse lines starting with ':'
-		elif recv[0] == ':':
-			split = recv.split(' ')
-			if split[1] == '372': return None
-			elif split[1] == 'PONG': self.send('PING :%s' %self.nick, 5)
-			elif split[1] == '001':
-				if self.oper is not None: self.socket.send('OPER %s\n' % self.oper)
-				if self.silence is not None:
-					if 'SILENCE' in self.servermode.keys():
-						_ = [ self.socket.send('SILENCE %s' %silence.strip()) for silence in self.silence.split(',') if time.sleep(0.3) ]
-				# initiate sasl auth
-				if self.auth and not self.authed: self.socket.send('CAP REQ :sasl\n')
-			# server modes
-			elif split[1] == '005':
-				if not hasattr(self, 'servermode'): self.servermode = dict()
-				for i in split[3:]:
-					if i[0] == ':': break
-					elif i.find('=') != -1: item, value = i.split('=')
-					else: item, value = [i, 1]
-					self.servermode[item] = value
-				return None
-			# WHO reply
-			elif split[1] == '352':
-				if split[7] == self.mynick and self.nick != self.mynick:
-					self.send('WHO %s' %self.mynick, 15)
-				elif split[7] == self.nick:
-					self.socket.send('NICK %s\n' % self.mynick)
-			# getting nicklist
-			elif split[1] == '353':
-				chan = split[4]
-				nicks = [ n for n in ' '.join( split[5:]).lstrip(':').split(' ') ]
-				self._build_nicklist(chan=chan, nicks=nicks)
-			# nick already used
-			elif split[1] == '433':
-				self.nick = ''.join(random.sample(self.nick, len(self.nick)))
-				self.socket.send('NICK %s\n' %self.nick)
-				self.socket.send('WHO %s\n' %self.mynick)
+		# ignore lines not starting with ':'
+		elif recv[0] != ':': return None
 
-			# sasl auth success
-			elif split[1] == '900':
-				self.authed = True
-				_, self.hostname = split[3].split('@')
-			elif split[1] == '903':
-				self.socket.send('JOIN %s\n' %self.chan)
+        split = recv.split(' ')
+        if split[1] == '372': return None
+        elif split[1] == 'PONG': self.send('PING :%s' %self.nick, 5)
+        elif split[1] == '001':
+            if self.oper is not None: self.socket.send('OPER %s\n' % self.oper)
+            if self.silence and 'SILENCE' in self.servermode.keys():
+                _ = [ self.socket.send('SILENCE %s' %silence.strip()) for silence in self.silence.split(',') if time.sleep(0.3) ]
+            # initiate sasl auth
+            if self.auth: self.socket.send('CAP REQ :sasl\n')
+        # server modes
+        elif split[1] == '005':
+            if not hasattr(self, 'servermode'): self.servermode = dict()
+            for i in split[3:]:
+                if i[0] == ':': break
+                elif i.find('=') != -1: item, value = i.split('=')
+                else: item, value = [i, 1]
+                self.servermode[item] = value
+            return None
+        # WHO reply
+        elif split[1] == '352':
+            if split[7] == self.mynick and self.nick != self.mynick:
+                self.send('WHO %s' %self.mynick, 15)
+            elif split[7] == self.nick:
+                self.socket.send('NICK %s\n' % self.mynick)
+        # getting nicklist
+        elif split[1] == '353':
+            chan = split[4]
+            nicks = [ n for n in ' '.join( split[5:]).lstrip(':').split(' ') ]
+            self._build_nicklist(chan=chan, nicks=nicks)
+        # nick already used
+        elif split[1] == '433':
+            self.nick = ''.join(random.sample(self.nick, len(self.nick)))
+            self.socket.send('NICK %s\n' %self.nick)
+            self.socket.send('WHO %s\n' %self.mynick)
 
-			elif split[1] == 'INVITE':
-				user, mask = misc.nickmask(split[0])
-				if users.get_user_access(self, mask) <= 5:
-					self.send('JOIN %s' %split[3].lstrip(':'))
+        # sasl auth success
+        elif split[1] == '900':
+            self.authed = True
+            _, self.hostname = split[3].split('@')
+        elif split[1] == '903':
+            if self.chan: self.socket.send('JOIN %s\n' %self.chan)
 
-			# /MOTD, or MOTD missing
-			elif split[1] == '376' or split[1] == '422':
-				# initiate ping/pong game
-				self.socket.send('PING :%s\n' % self.nick)
-				# join chans
-				if self.chan and (self.auth and self.authed) or not self.auth: self.socket.send('JOIN %s\n' %self.chan)
+        elif split[1] == 'INVITE':
+            user, mask = misc.nickmask(split[0])
+            if users.get_user_access(self, mask) <= 5:
+                self.send('JOIN %s' %split[3].lstrip(':'))
 
-			elif split[1] == 'NICK':
-				nick = split[0][1:]
-				#if split[0].startswith(':%s!' %self.nick):
-				if nick == self.nick:
-					self.nick = split[2].lstrip(':')
-				else:
-					newnick = split[2][1:]
-					for chan in self.nicklist:
-						if chan[0] == '#':
-							if not nick in self.nicklist[chan]: continue
-							self.nicklist[chan][newnick] = self.nicklist[chan].pop(nick)
+        # /MOTD, or MOTD missing
+        elif split[1] == '376' or split[1] == '422':
+            # initiate ping/pong game
+            self.socket.send('PING :%s\n' % self.nick)
+            # join chans
+            if self.chan and (self.auth and self.authed) or not self.auth: self.socket.send('JOIN %s\n' %self.chan)
 
-			elif split[1] == 'NOTICE':
-				if split[0].find('!') == -1:
-					message = ' '.join( split[2:] )
-					if message.find('Found your hostname:') != -1:
-						self.hostname = split[7]
-					elif message.find('QUOTE AUTH') != -1:
-						self.identify(method='auth')
+        elif split[1] == 'NICK':
+            nick = split[0][1:]
+            #if split[0].startswith(':%s!' %self.nick):
+            if nick == self.nick:
+                self.nick = split[2].lstrip(':')
+            else:
+                newnick = split[2][1:]
+                for chan in self.nicklist:
+                    if chan[0] == '#':
+                        if not nick in self.nicklist[chan]: continue
+                        self.nicklist[chan][newnick] = self.nicklist[chan].pop(nick)
 
-			elif split[1] == 'JOIN':
-				chan = split[2].lstrip(':')
-				nick, mask = misc.nickmask(split[0])
-				if split[0].startswith(':%s!' % self.nick): self.nicklist[chan] = dict()
-				else: self.nicklist[chan][nick] = dict()
+        elif split[1] == 'NOTICE':
+            if split[0].find('!') == -1:
+                message = ' '.join( split[2:] )
+                if message.find('Found your hostname:') != -1:
+                    self.hostname = split[7]
+                elif message.find('QUOTE AUTH') != -1:
+                    self.identify(method='auth')
 
-			elif split[1] == 'PART':
-				chan = split[2].lstrip(':')
-				nick, mask = misc.nickmask(split[0])
-				del( self.nicklist[chan][nick] )
+        elif split[1] == 'JOIN':
+            chan = split[2].lstrip(':')
+            nick, mask = misc.nickmask(split[0])
+            if split[0].startswith(':%s!' % self.nick): self.nicklist[chan] = dict()
+            else: self.nicklist[chan][nick] = dict()
 
-			# someone quits
-			elif split[1] == 'QUIT':
-				nick, mask = misc.nickmask(split[0])
-				# regain nick?
-				if nick == self.mynick:
-					self.socket.send('NICK %s\n' %self.mynick)
-				for chan in self.nicklist:
-					if chan[0] == '#':
-						if nick in self.nicklist[chan]: del( self.nicklist[chan][nick] )
+        elif split[1] == 'PART':
+            chan = split[2].lstrip(':')
+            nick, mask = misc.nickmask(split[0])
+            del( self.nicklist[chan][nick] )
 
-			elif split[1] == 'KICK':
-				chan = split[2].lstrip(':')
-				kicked = split[3]
-				if kicked == self.nick: del( self.nicklist[chan] )
-				else: del( self.nicklist[chan][kicked] )
+        # someone quits
+        elif split[1] == 'QUIT':
+            nick, mask = misc.nickmask(split[0])
+            # regain nick?
+            if nick == self.mynick:
+                self.socket.send('NICK %s\n' %self.mynick)
+            for chan in self.nicklist:
+                if chan[0] == '#':
+                    if nick in self.nicklist[chan]: del( self.nicklist[chan][nick] )
+
+        elif split[1] == 'KICK':
+            chan = split[2].lstrip(':')
+            kicked = split[3]
+            if kicked == self.nick: del( self.nicklist[chan] )
+            else: del( self.nicklist[chan][kicked] )
 
 		return True
