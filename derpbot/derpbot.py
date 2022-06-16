@@ -129,42 +129,45 @@ class Derpbot():
 		while self.running:
 			recv = self.irc.recvline()
 			if recv is False: break
-			split = recv.split(' ')
+			elif recv is not None:
+				split = recv.split(' ')
+				self._loop_events(split, recv)
 
-			foo = self._loop_events(split, recv)
+				if split[1] == 'PRIVMSG' or split[1] == 'NOTICE':
+					chan = split[2]
+					nick, mask = misc.nickmask(split[0])
+					if mask is None: continue
+					line = split[3:]
+					linestr = ' '.join(line)
 
-			# bot command ?
-			if split[1] == 'PRIVMSG':
-				chan = split[2]
-				nick, mask = misc.nickmask(split[0])
+					# ignored nick/string
+					if misc.is_ignored_nick(self, nick) or misc.is_ignored_string(self, chan, linestr):
+						return
 
-				line = split[3:]
-				linestr = ' '.join(line)
+					elif split[1] == 'PRIVMSG':
+						# ctcp message
+						if linestr.startswith('\x01'):
+							# make sure we're the target, and the ctcp message is well formatted
+							if chan == self.irc.nick and linestr.endswith('\x01'):
+								self.parse_admin(line, nick, mask)
+						# private non-ctcp message
+						elif chan == self.irc.nick:
+							if self.ownerkey is not None:
+								self.is_new_owner(line[0], nick, mask)
+						# message on channel
+						else:
+							self.parse_privmsg(recv, split, chan, nick, mask, line)
 
-				if misc.is_ignored_nick(self, nick) or misc.is_ignored_string(self, chan, linestr):
-					continue
+					elif split[1] == 'NOTICE':
+						# ignore public notices
+						if chan[0] == '#': continue
+						# private notice
+						elif chan == self.irc.nick: self.parse_notice(recv, split, nick, mask, line)
 
-				elif chan == self.irc.nick:
-					if self.ownerkey is not None: self.is_new_owner(split, nick, mask)
-					continue
-
-				command, args, bottalk = self.extract_command(line)
-				matches = self.get_matching_commands(command)
-				if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
-					res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
-					if res is not None:
-						if 'self' in res and res['self'] is not None: self = res['self']
-						if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
-				elif len(matches.keys()) > 1:
-					self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
-					self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
-				elif bottalk:
-					threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
-
-			elif split[1] == '001':
-				if not os.path.exists('%s/access' %self.datadir):
-					self.ownerkey = ''.join( random.sample( string.letters, 20 ))
-					print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
+				elif split[1] == '001':
+					if not os.path.exists('%s/access' %self.datadir):
+						self.ownerkey = ''.join( random.sample( string.letters, 20 ))
+						print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 
 
 	def load_plugins(self):
