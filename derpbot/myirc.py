@@ -177,8 +177,7 @@ class IRC():
 			if self.chan and (self.auth and self.authed) or not self.auth: self.socket.send('JOIN %s\n' %self.chan)
 
 		elif split[1] == 'NICK':
-			nick = split[0][1:]
-			#if split[0].startswith(':%s!' %self.nick):
+			nick, _ = misc.nickmask(split[0])
 			if nick == self.nick:
 				self.nick = split[2].lstrip(':')
 			else:
@@ -198,18 +197,18 @@ class IRC():
 
 		elif split[1] == 'JOIN':
 			chan = split[2].lstrip(':')
-			nick, mask = misc.nickmask(split[0])
-			if split[0].startswith(':%s!' % self.nick): self.nicklist[chan] = dict()
+			nick, _ = misc.nickmask(split[0])
+			if nick == self.nick: self.nicklist[chan] = dict()
 			else: self.nicklist[chan][nick] = dict()
 
 		elif split[1] == 'PART':
 			chan = split[2].lstrip(':')
-			nick, mask = misc.nickmask(split[0])
+			nick, _ = misc.nickmask(split[0])
 			del( self.nicklist[chan][nick] )
 
 		# someone quits
 		elif split[1] == 'QUIT':
-			nick, mask = misc.nickmask(split[0])
+			nick, _ = misc.nickmask(split[0])
 			# regain nick?
 			if nick == self.mynick:
 				self.socket.send('NICK %s\n' %self.mynick)
