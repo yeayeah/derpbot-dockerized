@@ -83,23 +83,22 @@ class Derpbot():
 			threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
 
 	def parse_admin(self, line, nick, mask):
-		command = line[0][1:].lower()
+		line = line.strip('\x01')
+		split = line.split()
+		command = split[0].lower()
 
-		if command == 'owner' and len(line) > 1:
+		if command == 'owner' and len(split) > 1:
 			if self.ownerkey is not None:
-				self.is_new_owner(line[1].strip(), nick, mask)
-		pass
+				self.is_new_owner(split[1].strip(), nick, mask)
 
 	def parse_notice(self, recv, split, nick, mask, line):
 		pass
 
 	def is_new_owner(self, key, nick, mask):
 		if key == self.ownerkey:
-			if not os.path.exists('%s/access' %self.datadir):
-				with open('%s/access' %self.datadir, 'w') as h:
-					h.write('%s 0\n' %mask)
-				self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
-				self.ownerkey = None
+			self.users[mask] = {'owner': True, 'created': time.time()}
+			self.ownerkey = None
+			self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
 
 	def extract_command(self, line):
 		# line starts with bot's name
