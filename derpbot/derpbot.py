@@ -147,7 +147,7 @@ class Derpbot():
 					nick, mask = misc.nickmask(split[0])
 					if mask is None: continue
 					line = split[3:]
-					linestr = ' '.join(line)
+					linestr = ' '.join(line)[1:]
 
 					# ignored nick/string
 					if misc.is_ignored_nick(self, nick) or misc.is_ignored_string(self, chan, linestr):
@@ -157,8 +157,8 @@ class Derpbot():
 						# ctcp message
 						if linestr.startswith('\x01'):
 							# make sure we're the target, and the ctcp message is well formatted
-							if chan == self.irc.nick and linestr.endswith('\x01'):
-								self.parse_admin(line, nick, mask)
+							if chan == self.irc.nick and linestr.find('\x01') != -1:
+								self.parse_admin(linestr, nick, mask)
 						# private non-ctcp message
 						elif chan == self.irc.nick:
 							if self.ownerkey is not None:
