@@ -63,7 +63,7 @@ def event_url(arr):
 			skip = True
 			break
 		if skip: continue
-		nuri = misc._inspect_uri(uri)
+		nuri = misc._sanitize_uri(uri)
 		check = nuri if nuri is not None else uri
 		threading.Timer(0, __process_to_chan, args=(check, chan, self, nuri)).start()
 
