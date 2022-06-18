@@ -22,6 +22,7 @@ def action_user(arr):
 		res = users.add(self, chan, mask, level)
 		if res:
 			self = res
+			users.save()
 			return {'self': self, 'reply': 'User `%s` added with level `%s`.' % (mask, level)}
 
 	elif arr['command'] == 'del':
@@ -34,7 +35,9 @@ def action_user(arr):
 			if res is not False:
 				self = res
 				deleted.append(mask)
-		return {'self': self, 'reply': 'removed mask(s) `%s`.' % '`, `'.join(deleted)}
+		if len(deleted):
+			users.save()
+			return {'self': self, 'reply': 'removed mask(s) `%s`.' % '`, `'.join(deleted)}
 
 	elif arr['command'] == 'list':
 		line = ''

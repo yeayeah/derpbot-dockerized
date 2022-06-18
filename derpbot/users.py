@@ -27,7 +27,6 @@ def save(self):
 def add(self, chan, mask, level):
 	if not mask in self.users: self.users[mask] = {'created': time.time()}
 	self.users[mask][chan] = level
-	save(self)
 	return self
 
 
@@ -35,5 +34,4 @@ def delete(self, chan, mask):
 	if not mask in self.users: return False
 	elif chan in self.users[mask]:
 		del( self.users[mask][chan] )
-		save(self)
 		return self
