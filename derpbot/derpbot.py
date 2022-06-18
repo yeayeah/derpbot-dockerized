@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import myirc
 import threading
 import rocksock
@@ -37,22 +38,31 @@ class Derpbot():
 	def _settings_load(self):
 		fp = os.path.join(self.datadir, 'settings.json')
 		self.settings = json.load(fp) if os.path.exists(fp) else dict()
+		fp = os.path.join(self.datadir, 'users.json')
+		if os.path.exists(fp):
+			with open(fp, 'r') as h: self.users = json.load(h)
+		else: self.users = dict()
 
 	def _settings_save(self):
+		if hasattr(self, 'users') and len(self.users):
+			with open(os.path.join( self.datadir, 'users.json'), 'w') as h:
+				json.dump(self.users, h, indent=4)
 		return
-		with open(os.path.join( self.datadir, 'settings.json' ), 'w') as h:
-			json.dump(self.settings, h, indent=4)
+		if hasattr(self, 'settings'):
+			with open(os.path.join( self.datadir, 'settings.json' ), 'w') as h:
+				json.dump(self.settings, h, indent=4)
+
 
 	def run(self):
 		if self.pm is not None: self.load_plugins()
 		else: self.pmlist = dict()
 
-		self._settings_load()
 		self.irc = myirc.IRC(self.server, self.port, self.nick, self.chan, self.ssl, self.args.irc_proxy, self.auth, oper=self.args.oper, silence=self.args.silence)
 
-		while self.running: self._run()
-
-		_settings_save()
+		while self.running:
+			self._settings_load()
+			self._run()
+			_settings_save()
 
 	def _loop_events(self, split, recv):
 		for p in self.pmlist:
@@ -165,9 +175,9 @@ class Derpbot():
 						elif chan == self.irc.nick: self.parse_notice(recv, split, nick, mask, line)
 
 				elif split[1] == '001':
-					if not os.path.exists('%s/access' %self.datadir):
+					if not os.path.exists('%s/users.json' %self.datadir):
 						self.ownerkey = ''.join( random.sample( string.letters, 20 ))
-						print('No access file available. Use `/msg %s %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
+						print('No access file available. Use `/ctcp %s owner %s` to auth to the bot' % (self.irc.nick, self.ownerkey) )
 
 
 	def load_plugins(self):
