@@ -5,37 +5,41 @@ import users
 def action_user(arr):
 	if arr['command'] == 'provides': return ['add', 'del', 'list']
 	self = arr['self']
-	if users.get_user_access(self, arr['mask']) > 5: return None
+	nick = arr['nick']
+	mask = arr['mask']
+	chan = arr['chan']
 
-	if not os.path.exists('%s/access' % self.datadir):
-		self.irc.privmsg(arr['chan'], 'Error: no access file..')
+	if not users.is_owner(self, mask):
+		access = users.get_chan_access(self, chan, mask)
+		if access is None: return None
 
 	elif arr['command'] == 'add':
-		username, level = arr['args']
-		if users.get_user_access(self, username) is not None: return {'reply': 'error, conflicting user `username`.' }
-		with open('%s/access' %self.datadir, 'a') as h:
-			h.write('%s %s\n' % (username, level))
-			return {'reply': 'User `%s` added with level `%s`.' % (username, level)}
+		mask, level = arr['args']
+		try: level = int(level)
+		except: return {'reply': 'error, level has to be numeric.'}
+		if access < level: return {'reply':'You may not.'}
+
+		res = users.add(self, chan, mask, level)
+		if res:
+			self = res
+			return {'self': self, 'reply': 'User `%s` added with level `%s`.' % (mask, level)}
 
 	elif arr['command'] == 'del':
-		with open('%s/access'% self.datadir, 'r') as r:
-			users = dict()
-			for l in r.readlines():
-				l = l.strip()
-				u, l = l.split(' ')
-				users[u] = l
-
-		with open('%s/access'%self.datadir, 'w') as h:
-			deleted = []
-			for user in users.keys():
-				if not user in arr['args']:
-					h.write('%s %s\n' % (user, users[user]))
-				else:
-					deleted.append(user)
-
-			return {'reply': 'removed user(s) `%s`.' % '`, `'.join(deleted)}
+		deleted = list()
+		for mask in arr['args']:
+			mask = mask.strip()
+			maccess = users.get_chan_access(self, chan, mask)
+			if access < maccess: continue
+			res = users.delete(self, chan, mask)
+			if res is not False:
+				self = res
+				deleted.append(mask)
+		return {'self': self, 'reply': 'removed mask(s) `%s`.' % '`, `'.join(deleted)}
 
 	elif arr['command'] == 'list':
-		with open('%s/access'%self.datadir, 'r') as r:
-			for l in r.readlines():
-				self.irc.notice(arr['nick'], l.strip())
+		line = ''
+		for mask in self.users:
+			if chan in self.users[mask]:
+				if len(line): line = '%s, %s: %d' % (line, mask, self.users[mask][chan])
+				else: line = '%s: %d' % (mask, self.users[mask][chan])
+		self.irc.notice(nick, line)
