@@ -9,11 +9,11 @@ def action_user(arr):
 	mask = arr['mask']
 	chan = arr['chan']
 
-	if not users.is_owner(self, mask):
-		access = users.get_chan_access(self, chan, mask)
-		if access is None: return None
+	if users.is_owner(self, mask): access = 0
+	else: access = users.get_chan_access(self, chan, mask)
+	if access is None: return None
 
-	elif arr['command'] == 'add':
+	if arr['command'] == 'add':
 		mask, level = arr['args']
 		try: level = int(level)
 		except: return {'reply': 'error, level has to be numeric.'}
@@ -30,7 +30,7 @@ def action_user(arr):
 		for mask in arr['args']:
 			mask = mask.strip()
 			maccess = users.get_chan_access(self, chan, mask)
-			if access < maccess: continue
+			if access <= maccess: continue
 			res = users.delete(self, chan, mask)
 			if res is not False:
 				self = res
