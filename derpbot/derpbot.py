@@ -90,6 +90,9 @@ class Derpbot():
 		if command == 'owner' and len(split) > 1:
 			if self.ownerkey is not None:
 				self.is_new_owner(split[1].strip(), nick, mask)
+		elif command == 'isop' and len(split) > 1:
+			for chan in split[1:]:
+				if users.is_owner(self, mask) or users.get_chan_access(self, chan, mask) <= 30: self.irc.send('CHANSERV OP %s' %chan)
 
 	def parse_notice(self, recv, split, nick, mask, line):
 		pass
@@ -99,6 +102,7 @@ class Derpbot():
 			self.users[mask] = {'owner': True, 'created': time.time()}
 			self.ownerkey = None
 			self.irc.privmsg(nick, 'Hello, master. (%s)' %mask)
+			users.save(self)
 
 	def extract_command(self, line):
 		# line starts with bot's name
