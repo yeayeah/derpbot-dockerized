@@ -21,6 +21,7 @@ class IRC():
 		self.oper = oper
 		self.silence = silence
 		self.nicklist = dict()
+		self.avail = None
 
 	def login(self):
 		self.socket.send('NICK %s\nUSER %s %s localhost :%s\n' % (self.nick, self.nick, self.server, self.nick))
@@ -77,19 +78,21 @@ class IRC():
 		self.part(chan, reason)
 		self.join(chan, key)
 
-	def privmsg(self, dest, message, delay=0):
-		avail = 512
+	def set_avail(self, privmsg, dest, style):
 		# user!ident@host privmsg #dest :<data>
-		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('privmsg') + len(dest) + 4)
-		if delay == 0: self.socket.send('PRIVMSG %s :%s\n' %(dest, message[:avail]))
-		else: threading.Timer(delay, self.privmsg, (dest, message, 0)).start()
-
-	def notice(self, dest, message, delay=0):
 		avail = 512
-		# user!ident@host notice #dest :<data>
-		avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len('notice') + len(dest) + 4)
-		if delay == 0: self.socket.send('NOTICE %s :%s\n' %(dest, message[:avail]))
-		else: threading.Timer(delay, self.notice, (dest, message, 0)).start()
+		self.avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len(style) + len(dest) + 4)
+	def privmsg(self, dest, message, delay=0):
+		self._privnot(dest, message, delay, 'PRIVMSG')
+	def notice(self, dest, message, delay=0):
+		self._privnot(dest, message, delay, 'NOTICE')
+	def privnot(self, dest, message, delay, style='PRIVMSG'):
+		self.set_avail(message, dest)
+		inc = 0
+		if delay > 0: return threading.Timer(delay, self.privnot, (dest, message, 0, style)).start()
+		while inc < len(message):
+			self.socket.send('%s %s :%s\n' %(style, dest, message[inc:inc+avail]))
+			inc = inc + avail
 
 	def _build_nicklist(self, chan, nicks):
 		if not chan in self.nicklist: self.nicklist[chan] = dict()
