@@ -17,12 +17,12 @@ def action_user(arr):
 		mask, level = arr['args']
 		try: level = int(level)
 		except: return {'reply': 'error, level has to be numeric.'}
-		if access < level: return {'reply':'You may not.'}
+		if level <= access: return {'reply':'You may not.'}
 
 		res = users.add(self, chan, mask, level)
 		if res:
 			self = res
-			users.save()
+			users.save(self)
 			return {'self': self, 'reply': 'User `%s` added with level `%s`.' % (mask, level)}
 
 	elif arr['command'] == 'del':
@@ -30,13 +30,13 @@ def action_user(arr):
 		for mask in arr['args']:
 			mask = mask.strip()
 			maccess = users.get_chan_access(self, chan, mask)
-			if access <= maccess: continue
+			if access >= maccess: continue
 			res = users.delete(self, chan, mask)
 			if res is not False:
 				self = res
 				deleted.append(mask)
 		if len(deleted):
-			users.save()
+			users.save(self)
 			return {'self': self, 'reply': 'removed mask(s) `%s`.' % '`, `'.join(deleted)}
 
 	elif arr['command'] == 'list':
