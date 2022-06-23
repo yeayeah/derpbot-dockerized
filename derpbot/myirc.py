@@ -78,21 +78,22 @@ class IRC():
 		self.part(chan, reason)
 		self.join(chan, key)
 
-	def set_avail(self, privmsg, dest, style):
-		# user!ident@host privmsg #dest :<data>
+	def set_avail(self, dest, style):
+		# :user!ident@host privmsg #dest :<data>\n
 		avail = 512
-		self.avail = avail - ( (len(self.nick)*2) + 2 + len(self.hostname) + len(style) + len(dest) + 4)
+		self.avail = avail - ( 1 + (len(self.nick)*2) + 2 + len(self.hostname) + 1 + len(style) + 1 + len(dest) + 3)
 	def privmsg(self, dest, message, delay=0):
 		self._privnot(dest, message, delay, 'PRIVMSG')
 	def notice(self, dest, message, delay=0):
 		self._privnot(dest, message, delay, 'NOTICE')
-	def privnot(self, dest, message, delay, style='PRIVMSG'):
-		self.set_avail(message, dest)
-		inc = 0
+	def _privnot(self, dest, message, delay, style='PRIVMSG'):
 		if delay > 0: return threading.Timer(delay, self.privnot, (dest, message, 0, style)).start()
+		self.set_avail(dest, style)
+		inc = 0
 		while inc < len(message):
-			self.socket.send('%s %s :%s\n' %(style, dest, message[inc:inc+avail]))
-			inc = inc + avail
+			self.socket.send('%s %s :%s\n' %(style, dest, message[inc:inc+self.avail]))
+			inc = inc + self.avail
+			if inc < len(message): time.sleep(0.3)
 
 	def _build_nicklist(self, chan, nicks):
 		if not chan in self.nicklist: self.nicklist[chan] = dict()
