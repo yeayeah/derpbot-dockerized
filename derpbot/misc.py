@@ -83,3 +83,10 @@ def is_ignored_nick(self, nick, chan=None):
 
 def is_ignored_mask(self, nick, chan=None):
 	pass
+
+def jsontofile(fname, js):
+	with open('%s' % fname, 'w') as h:
+		json.dump(js, h, indent=2)
+def filetojson(fname):
+	with open(fname, 'r') as h:
+		return json.load(h)
