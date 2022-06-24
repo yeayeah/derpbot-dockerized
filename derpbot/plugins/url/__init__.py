@@ -43,7 +43,10 @@ def __process_to_chan(uri, chan, self, nuri):
 	self.irc.privmsg(chan, '^ %s' %j)
 
 def event_url(arr):
-	if arr['event'] != 'PRIVMSG': return None
+	provides = ['PRIVMSG']
+	if arr['command'] == 'provides': return provides
+	elif not arr['event'] in provides: return None
+	#if arr['event'] != 'PRIVMSG': return None
 
 	self = arr['self']
 	if self.irc.nick != self.irc.mynick: return None

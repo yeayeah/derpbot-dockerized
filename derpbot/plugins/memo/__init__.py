@@ -3,11 +3,14 @@ import hashlib
 from misc import nickmask
 
 def event_memo(arr):
+	provides = ['JOIN']
+	if arr['command'] == 'provides': return provides
+	elif not arr['event'] in provides: return None
+
 	self = arr['self']
 	if not hasattr(self, 'p_tell'): return None
-	event = arr['event']
 
-	if event == 'JOIN':
+	if arr['event'] == 'JOIN':
 
 		nick, mask = nickmask( arr['recv'].split(' ')[0] )
 		remove = []

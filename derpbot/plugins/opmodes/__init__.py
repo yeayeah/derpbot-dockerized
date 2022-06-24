@@ -2,7 +2,9 @@ import misc
 import users
 
 def event_opmodes(arr):
-	if arr['event'] == 'JOIN':
+	provides = ['JOIN']
+	if arr['command'] == 'provides': return provides
+	elif arr['event'] == 'JOIN':
 		self = arr['self']
 		split = arr['recv'].split(' ')
 		chan = split[2].lstrip(':')
