@@ -62,14 +62,16 @@ class Derpbot():
 		while self.running:
 			self._settings_load()
 			self._run()
-			_settings_save()
+			self._settings_save()
 
 	def _loop_events(self, split, recv):
 		for p in self.pmlist:
-			threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self })).start()
+			provides = self.pm.execute_event_hook(p, {'command': 'provides'})
+			if provides and split[1] in provides:
+				threading.Timer(0, self.pm.execute_event_hook, (p, {'event': split[1], 'recv': recv, 'self': self, 'command': None })).start()
 
 	def parse_privmsg(self, recv, split, chan, nick, mask, line):
-		command, args, bottalk = self.extract_command(line)
+		command, args, self.bottalk = self.extract_command(line)
 		matches = self.get_matching_commands(command)
 		if len(matches.keys()) == 1 and len(matches[ matches.keys()[0] ]) == 1:
 			res = self.run_plugin( nick, chan, mask, matches.keys()[0], matches[matches.keys()[0]][0], args)
@@ -77,9 +79,9 @@ class Derpbot():
 				if 'self' in res and res['self'] is not None: self = res['self']
 				if 'reply' in res and res['reply']: self.irc.privmsg(chan, res['reply'])
 		elif len(matches.keys()) > 1:
-			self.irc.privmsg(chan, '%s: Ambiguous command. "%s" offer command %s' % (nick, ', '.join( matches.keys()), command))
-			self.irc.privmsg(chan, '%s: Use "pluginName:command" if multiple plugins offer the same command.' % nick)
-		elif bottalk:
+			self.irc.privmsg(chan, '%s: Ambiguous command. Plugins `%s` offer trigger `%s`' % (nick, '`, `'.join( matches.keys()), command))
+			self.irc.privmsg(chan, '%s: Use `pluginName:trigger` if multiple plugins offer the same trigger.' % nick)
+		elif self.bottalk:
 			threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
 
 	def parse_admin(self, line, nick, mask):
