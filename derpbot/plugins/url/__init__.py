@@ -46,7 +46,6 @@ def event_url(arr):
 	provides = ['PRIVMSG']
 	if arr['command'] == 'provides': return provides
 	elif not arr['event'] in provides: return None
-	#if arr['event'] != 'PRIVMSG': return None
 
 	self = arr['self']
 	if self.irc.nick != self.irc.mynick: return None
