@@ -188,10 +188,9 @@ class Derpbot():
 	def load_plugins(self):
 		self.pmlist = dict()
 		for plugin in self.pm.get_available_plugins():
-			res = self.pm.load_plugin(plugin)
-			if res and 'self' in res:
-				print('here: self is being reset')
-				self = res['self']
+			self.pm.load_plugin(plugin)
+			res = self.pm.init_plugin(plugin, self)
+			if res and 'self' in res: self = res['self']
 			try: provides = self.pm.execute_action_hook(plugin, { 'command': 'provides' })
 			except: provides = [ plugin ]
 			finally: self.pmlist[plugin] = provides

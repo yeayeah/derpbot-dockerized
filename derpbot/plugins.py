@@ -42,6 +42,15 @@ class PluginManager:
 		'''
 		return self.loaded_plugins.copy()
 
+	def init_plugin(self, plugin_name, rself=None):
+		module = self.loaded_plugins[plugin_name]['module']
+		hook_func_name = 'init_%s' %plugin_name
+		if hasattr(module, hook_func_name):
+			hook_func = getattr(module, hook_func_name)
+			hook_params = {'self': rself}
+			rself = hook_func(hook_params)
+			return rself
+
 	def load_plugin(self, plugin_name):
 		'''
 		Loads a plugin module
