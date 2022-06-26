@@ -1,6 +1,6 @@
 *pyc
 derpbot.yaml
-docker-compose.yaml
+docker-compose.yaml*
 *.learn
 __pycache__
 *.tar.xz
