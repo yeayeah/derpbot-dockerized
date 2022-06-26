@@ -95,6 +95,10 @@ class IRC():
 			inc = inc + self.avail
 			if inc < len(message): time.sleep(0.3)
 
+	def action(self, dest, message, delay=0):
+		if delay > 0: return threading.Timer(delay, self.action, (dest, message, 0)).start()
+		self.socket.send('PRIVMSG %s :\x01ACTION %s\x01\n' %(dest, message))
+
 	def _build_nicklist(self, chan, nicks):
 		if not chan in self.nicklist: self.nicklist[chan] = dict()
 		modes = {'@': 'op', '%': 'halfop', '+': 'voice'}
