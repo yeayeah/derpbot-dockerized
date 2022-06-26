@@ -94,7 +94,7 @@ def action_url(arr):
 			title, desc = _get_url_title(check, proxies=self.args.http_proxy)
 
 			if title is None: continue
-			elif nuri is not None: self.irc.privmsg(chan, nuri)
+			elif nuri is not None: self.irc.action(chan, nuri)
 
 			self.irc.privmsg(chan, '^ %s' % title)
 			time.sleep(0.5)
