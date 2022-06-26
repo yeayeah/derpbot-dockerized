@@ -24,6 +24,9 @@ def action_opmodes(arr):
 	nick = arr['nick']
 	mask = arr['mask']
 
+	csplit = chan.split('#')
+	if len(csplit[0]): chan = '#%s' % '#'.join(csplit[1:])
+
 	if arr['command'] == 'up' or arr['command'] == 'down':
 		access = users.get_chan_access(self, chan, mask)
 		if access is not None:

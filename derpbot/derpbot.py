@@ -175,7 +175,7 @@ class Derpbot():
 
 					elif split[1] == 'NOTICE':
 						# ignore public notices
-						if chan[0] == '#': continue
+						if chan.find('#') != -1: continue
 						# private notice
 						elif chan == self.irc.nick: self.parse_notice(recv, split, nick, mask, line)
 
@@ -188,7 +188,10 @@ class Derpbot():
 	def load_plugins(self):
 		self.pmlist = dict()
 		for plugin in self.pm.get_available_plugins():
-			self.pm.load_plugin(plugin)
+			res = self.pm.load_plugin(plugin)
+			if res and 'self' in res:
+				print('here: self is being reset')
+				self = res['self']
 			try: provides = self.pm.execute_action_hook(plugin, { 'command': 'provides' })
 			except: provides = [ plugin ]
 			finally: self.pmlist[plugin] = provides
