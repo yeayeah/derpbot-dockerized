@@ -82,7 +82,7 @@ class Derpbot():
 			self.irc.privmsg(chan, '%s: Ambiguous command. Plugins `%s` offer trigger `%s`' % (nick, '`, `'.join( matches.keys()), command))
 			self.irc.privmsg(chan, '%s: Use `pluginName:trigger` if multiple plugins offer the same trigger.' % nick)
 		elif self.bottalk:
-			threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ))).start()
+			threading.Timer(0, self.hecketer.ask, args=(self.irc.privmsg, chan, nick, ' '.join( line[1:] ), self)).start()
 
 	def parse_admin(self, line, nick, mask):
 		line = line.strip('\x01')

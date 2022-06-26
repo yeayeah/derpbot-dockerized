@@ -95,7 +95,7 @@ class Hecketer():
 			if reply is not None and not reply.endswith('...'): answers.append(reply)
 		return answers if len(answers) else None
 
-	def ask(self, privmsg, chan, nick, text):
+	def ask(self, privmsg, chan, nick, text, rself):
 		answers = []
 		random.shuffle(self.sites)
 
@@ -124,6 +124,7 @@ class Hecketer():
 			elif len(answers) and self.return_asap: break
 
 		if answers is None or not len(answers):
+			rself.irc.action(chan, 'thinks...')
 			answers = [ ' '.join( self.markov.generate_text() ) ]
 		elif self.markov:
 			for answer in answers:
